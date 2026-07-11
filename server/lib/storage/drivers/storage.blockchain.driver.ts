@@ -1,5 +1,4 @@
-import { ResultAsync } from 'neverthrow'
-import { createNone, createSome, type Option } from 'option-t/plain_option'
+import { Effect, Option } from 'effect'
 import { match } from 'ts-pattern'
 import {
   type Address,
@@ -12,18 +11,20 @@ import {
   type WalletClient,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
+import { HttpStatus } from '@/server/lib/http/http.status'
 import { quizStorageAbi } from '@/server/lib/storage/drivers/storage.blockchain.abi'
 import type { IStorageDriver } from '@/server/lib/storage/drivers/storage.driver.interface'
-import { StorageError } from '@/server/lib/storage/storage.error'
+import { StorageMessage } from '@/server/lib/storage/storage.message'
 import { computeStats } from '@/server/lib/storage/storage.stats'
-import type {
-  NewAnswerInput,
-  NewSessionInput,
-  QuestionRef,
-  SessionPatch,
-  StoredAnswer,
-  StoredQuestion,
-  StoredSession,
+import {
+  StorageError,
+  type NewAnswerInput,
+  type NewSessionInput,
+  type QuestionRef,
+  type SessionPatch,
+  type StoredAnswer,
+  type StoredQuestion,
+  type StoredSession,
 } from '@/server/lib/storage/storage.types'
 import type { AnswerLetter, SessionMode, SessionStatus, StatsResult } from '@/shared/types'
 
@@ -137,11 +138,23 @@ class BlockchainStorageDriver implements IStorageDriver {
     this.address = getAddress(config.contractAddress)
   }
 
-  /** Wraps a contract interaction into a `ResultAsync`. */
-  private call<T>(op: string, run: () => Promise<T>): ResultAsync<T, string> {
-    return ResultAsync.fromPromise(run(), (err) =>
-      StorageError.QUERY_FAILED(op, err instanceof Error ? err.message : String(err)),
-    )
+  /**
+   * Wraps a contract interaction into an `Effect`, tagging failures as `StorageError`.
+   *
+   * @param {string} op - Operation name for error messages.
+   * @param {() => Promise<T>} run - The contract interaction to execute.
+   *
+   * @returns {Effect.Effect<T, StorageError>} The result or a tagged storage error.
+   */
+  private call<T>(op: string, run: () => Promise<T>): Effect.Effect<T, StorageError> {
+    return Effect.tryPromise({
+      try: run,
+      catch: (e): StorageError =>
+        new StorageError({
+          message: `${StorageMessage.QUERY_FAILED}: ${op}: ${e instanceof Error ? e.message : String(e)}`,
+          status: HttpStatus.INTERNAL,
+        }),
+    })
   }
 
   /** Sends a write and waits for it to be mined. */
@@ -196,7 +209,7 @@ class BlockchainStorageDriver implements IStorageDriver {
     return { address: this.address, abi: quizStorageAbi } as const
   }
 
-  listQuestionRefs(): ResultAsync<QuestionRef[], string> {
+  listQuestionRefs(): Effect.Effect<QuestionRef[], StorageError> {
     return this.call('listQuestionRefs', async () => {
       const refs = await this.publicClient.readContract({
         ...this.base,
@@ -207,7 +220,7 @@ class BlockchainStorageDriver implements IStorageDriver {
     })
   }
 
-  countQuestions(): ResultAsync<number, string> {
+  countQuestions(): Effect.Effect<number, StorageError> {
     return this.call('countQuestions', async () =>
       Number(
         await this.publicClient.readContract({
@@ -219,8 +232,8 @@ class BlockchainStorageDriver implements IStorageDriver {
     )
   }
 
-  getQuestionsByIds(ids: number[]): ResultAsync<StoredQuestion[], string> {
-    if (ids.length === 0) return ResultAsync.fromSafePromise(Promise.resolve([]))
+  getQuestionsByIds(ids: number[]): Effect.Effect<StoredQuestion[], StorageError> {
+    if (ids.length === 0) return Effect.succeed([])
     return this.call('getQuestionsByIds', async () => {
       const rows = await this.publicClient.readContract({
         ...this.base,
@@ -231,7 +244,7 @@ class BlockchainStorageDriver implements IStorageDriver {
     })
   }
 
-  createSession(input: NewSessionInput): ResultAsync<StoredSession, string> {
+  createSession(input: NewSessionInput): Effect.Effect<StoredSession, StorageError> {
     return this.call('createSession', async () => {
       const args = [
         BigInt(input.userId),
@@ -266,24 +279,28 @@ class BlockchainStorageDriver implements IStorageDriver {
     })
   }
 
-  getSession(id: number): ResultAsync<Option<StoredSession>, string> {
+  getSession(id: number): Effect.Effect<Option.Option<StoredSession>, StorageError> {
     return this.call('getSession', async () => {
       const exists = await this.publicClient.readContract({
         ...this.base,
         functionName: 'sessionExists',
         args: [BigInt(id)],
       })
-      if (!exists) return createNone()
+      if (!exists) return undefined
       const chain = await this.publicClient.readContract({
         ...this.base,
         functionName: 'getSession',
         args: [BigInt(id)],
       })
-      return createSome(this.toStoredSession(chain))
-    })
+      return this.toStoredSession(chain)
+    }).pipe(
+      Effect.map(
+        (row): Option.Option<StoredSession> => (row ? Option.some(row) : Option.none()),
+      ),
+    )
   }
 
-  listSessions(userId: number): ResultAsync<StoredSession[], string> {
+  listSessions(userId: number): Effect.Effect<StoredSession[], StorageError> {
     return this.call('listSessions', async () => {
       const rows = await this.publicClient.readContract({
         ...this.base,
@@ -296,7 +313,7 @@ class BlockchainStorageDriver implements IStorageDriver {
     })
   }
 
-  updateSession(id: number, patch: SessionPatch): ResultAsync<void, string> {
+  updateSession(id: number, patch: SessionPatch): Effect.Effect<void, StorageError> {
     // ponytail: single setter taking the full patch; adapt to your contract.
     return this.call('updateSession', () =>
       this.mined(
@@ -317,7 +334,7 @@ class BlockchainStorageDriver implements IStorageDriver {
     )
   }
 
-  createAnswer(input: NewAnswerInput): ResultAsync<void, string> {
+  createAnswer(input: NewAnswerInput): Effect.Effect<void, StorageError> {
     return this.call('createAnswer', () =>
       this.mined(
         this.walletClient.writeContract({
@@ -337,7 +354,7 @@ class BlockchainStorageDriver implements IStorageDriver {
     )
   }
 
-  listAnswers(sessionId: number): ResultAsync<StoredAnswer[], string> {
+  listAnswers(sessionId: number): Effect.Effect<StoredAnswer[], StorageError> {
     return this.call('listAnswers', async () => {
       const rows = await this.publicClient.readContract({
         ...this.base,
@@ -348,7 +365,7 @@ class BlockchainStorageDriver implements IStorageDriver {
     })
   }
 
-  getStats(userId: number): ResultAsync<StatsResult, string> {
+  getStats(userId: number): Effect.Effect<StatsResult, StorageError> {
     return this.call('getStats', async () => {
       const sessionRows = await this.publicClient.readContract({
         ...this.base,

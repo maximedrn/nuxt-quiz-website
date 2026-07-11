@@ -1,6 +1,6 @@
-import type { ResultAsync } from 'neverthrow'
-import type { Option } from 'option-t/plain_option'
+import type { Effect, Option } from 'effect'
 import type { ICacheService } from '@/server/lib/cache/cache.interface'
+import type { CacheError } from '@/server/lib/cache/cache.types'
 import type { ICacheDriver } from '@/server/lib/cache/drivers/cache.driver.interface'
 
 /**
@@ -17,19 +17,19 @@ abstract class BaseCacheService implements ICacheService {
     this.driver = driver
   }
 
-  getOrSet<T>(key: string, ttlSeconds: number, factory: () => Promise<T>): ResultAsync<T, string> {
+  getOrSet<A>(key: string, ttlSeconds: number, factory: () => Effect.Effect<A, CacheError>): Effect.Effect<A, CacheError> {
     return this.driver.getOrSet(key, ttlSeconds, factory)
   }
 
-  set<T>(key: string, value: T, ttlSeconds: number): ResultAsync<void, string> {
+  set<A>(key: string, value: A, ttlSeconds: number): Effect.Effect<void, CacheError> {
     return this.driver.set(key, value, ttlSeconds)
   }
 
-  get<T>(key: string): ResultAsync<Option<T>, string> {
-    return this.driver.get<T>(key)
+  get<A>(key: string): Effect.Effect<Option.Option<A>, CacheError> {
+    return this.driver.get<A>(key)
   }
 
-  delete(key: string): ResultAsync<void, string> {
+  delete(key: string): Effect.Effect<void, CacheError> {
     return this.driver.delete(key)
   }
 }

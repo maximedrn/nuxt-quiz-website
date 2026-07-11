@@ -1,7 +1,14 @@
-import type { ResultAsync } from 'neverthrow'
-import type { Option } from 'option-t/plain_option'
+import { Data } from 'effect'
+import type { Effect, Option } from 'effect'
 import type { RequireAtLeastOne } from 'type-fest'
+import { HttpStatus } from '@/server/lib/http/http.status'
 import type { AnswerLetter, SessionMode, SessionStatus, StatsResult } from '@/shared/types'
+
+/** Tagged error for storage domain failures. */
+export class StorageError extends Data.TaggedError('StorageError')<{
+  readonly message: string
+  readonly status: HttpStatus
+}> {}
 
 /** Lightweight question reference used when building a session. */
 interface QuestionRef {
@@ -74,19 +81,19 @@ interface NewAnswerInput {
  * Both the public service (`IStorageService`) and each low-level driver
  * (`IStorageDriver`) implement exactly these operations, so a Postgres backend
  * and an on-chain backend are drop-in interchangeable. Nullable reads use
- * `Option`; every method is fallible and returns a `ResultAsync`.
+ * `Option`; every method is fallible and returns an `Effect`.
  */
 interface StorageOperations {
-  listQuestionRefs(): ResultAsync<QuestionRef[], string>
-  countQuestions(): ResultAsync<number, string>
-  getQuestionsByIds(ids: number[]): ResultAsync<StoredQuestion[], string>
-  createSession(input: NewSessionInput): ResultAsync<StoredSession, string>
-  getSession(id: number): ResultAsync<Option<StoredSession>, string>
-  listSessions(userId: number): ResultAsync<StoredSession[], string>
-  updateSession(id: number, patch: SessionPatch): ResultAsync<void, string>
-  createAnswer(input: NewAnswerInput): ResultAsync<void, string>
-  listAnswers(sessionId: number): ResultAsync<StoredAnswer[], string>
-  getStats(userId: number): ResultAsync<StatsResult, string>
+  listQuestionRefs(): Effect.Effect<QuestionRef[], StorageError>
+  countQuestions(): Effect.Effect<number, StorageError>
+  getQuestionsByIds(ids: number[]): Effect.Effect<StoredQuestion[], StorageError>
+  createSession(input: NewSessionInput): Effect.Effect<StoredSession, StorageError>
+  getSession(id: number): Effect.Effect<Option.Option<StoredSession>, StorageError>
+  listSessions(userId: number): Effect.Effect<StoredSession[], StorageError>
+  updateSession(id: number, patch: SessionPatch): Effect.Effect<void, StorageError>
+  createAnswer(input: NewAnswerInput): Effect.Effect<void, StorageError>
+  listAnswers(sessionId: number): Effect.Effect<StoredAnswer[], StorageError>
+  getStats(userId: number): Effect.Effect<StatsResult, StorageError>
 }
 
 export type {

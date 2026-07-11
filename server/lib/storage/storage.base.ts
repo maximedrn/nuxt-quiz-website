@@ -1,5 +1,4 @@
-import type { ResultAsync } from 'neverthrow'
-import type { Option } from 'option-t/plain_option'
+import type { Effect, Option } from 'effect'
 import type { IStorageDriver } from '@/server/lib/storage/drivers/storage.driver.interface'
 import type { IStorageService } from '@/server/lib/storage/storage.interface'
 import type {
@@ -11,6 +10,7 @@ import type {
   StoredQuestion,
   StoredSession,
 } from '@/server/lib/storage/storage.types'
+import { StorageError } from '@/server/lib/storage/storage.types'
 import type { StatsResult } from '@/shared/types'
 
 /**
@@ -28,43 +28,43 @@ abstract class BaseStorageService implements IStorageService {
     this.driver = driver
   }
 
-  listQuestionRefs(): ResultAsync<QuestionRef[], string> {
+  listQuestionRefs(): Effect.Effect<QuestionRef[], StorageError> {
     return this.driver.listQuestionRefs()
   }
 
-  countQuestions(): ResultAsync<number, string> {
+  countQuestions(): Effect.Effect<number, StorageError> {
     return this.driver.countQuestions()
   }
 
-  getQuestionsByIds(ids: number[]): ResultAsync<StoredQuestion[], string> {
+  getQuestionsByIds(ids: number[]): Effect.Effect<StoredQuestion[], StorageError> {
     return this.driver.getQuestionsByIds(ids)
   }
 
-  createSession(input: NewSessionInput): ResultAsync<StoredSession, string> {
+  createSession(input: NewSessionInput): Effect.Effect<StoredSession, StorageError> {
     return this.driver.createSession(input)
   }
 
-  getSession(id: number): ResultAsync<Option<StoredSession>, string> {
+  getSession(id: number): Effect.Effect<Option.Option<StoredSession>, StorageError> {
     return this.driver.getSession(id)
   }
 
-  listSessions(userId: number): ResultAsync<StoredSession[], string> {
+  listSessions(userId: number): Effect.Effect<StoredSession[], StorageError> {
     return this.driver.listSessions(userId)
   }
 
-  updateSession(id: number, patch: SessionPatch): ResultAsync<void, string> {
+  updateSession(id: number, patch: SessionPatch): Effect.Effect<void, StorageError> {
     return this.driver.updateSession(id, patch)
   }
 
-  createAnswer(input: NewAnswerInput): ResultAsync<void, string> {
+  createAnswer(input: NewAnswerInput): Effect.Effect<void, StorageError> {
     return this.driver.createAnswer(input)
   }
 
-  listAnswers(sessionId: number): ResultAsync<StoredAnswer[], string> {
+  listAnswers(sessionId: number): Effect.Effect<StoredAnswer[], StorageError> {
     return this.driver.listAnswers(sessionId)
   }
 
-  getStats(userId: number): ResultAsync<StatsResult, string> {
+  getStats(userId: number): Effect.Effect<StatsResult, StorageError> {
     return this.driver.getStats(userId)
   }
 }

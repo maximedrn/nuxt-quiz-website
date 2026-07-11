@@ -12,7 +12,6 @@ const CacheTtl = {
 const CacheKey = {
   stats: (userId: number) => `stats:user:${userId}`,
   questionCount: () => 'questions:count',
-  refreshToken: (jti: string) => `auth:refresh:${jti}`,
 } as const
 
 export { CacheKey, CacheTtl }

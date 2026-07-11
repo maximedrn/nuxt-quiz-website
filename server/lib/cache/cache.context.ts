@@ -1,3 +1,4 @@
+import { Effect } from 'effect'
 import { createCache } from '@/server/lib/cache/cache.factory'
 import type { ICacheService } from '@/server/lib/cache/cache.interface'
 import { useEnv } from '@/server/lib/env/env.context'
@@ -11,11 +12,13 @@ let _cache: ICacheService | undefined
  */
 export function useCache(): ICacheService {
   if (!_cache) {
-    const result = createCache({ redisUrl: useEnv().config.redisUrl })
-    if (result.isErr()) {
-      throw createError({ statusCode: 500, statusMessage: result.error })
-    }
-    _cache = result.value
+    const effect = createCache({ redisUrl: useEnv().config.redisUrl })
+    // ponytail: synchronous bootstrap — Effect.runSync would fail on async; factory is sync here
+    _cache = Effect.runSync(effect.pipe(
+      Effect.catchAll((e) => {
+        throw createError({ statusCode: e.status, statusMessage: e.message })
+      }),
+    ))
   }
   return _cache
 }

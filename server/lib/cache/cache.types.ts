@@ -1,8 +1,15 @@
-import type { ResultAsync } from 'neverthrow'
-import type { Option } from 'option-t/plain_option'
+import { Data } from 'effect'
+import type { Effect, Option } from 'effect'
+import { HttpStatus } from '@/server/lib/http/http.status'
+
+/** Tagged error for cache domain failures. */
+export class CacheError extends Data.TaggedError('CacheError')<{
+  readonly message: string
+  readonly status: HttpStatus
+}> {}
 
 /** Config to build a cache backed by memory (L1) + Redis (L2). */
-interface CacheConfig {
+export interface CacheConfig {
   readonly redisUrl: string
   /** Max entries held in the in-memory L1 tier. */
   readonly l1MaxItems?: number
@@ -12,17 +19,46 @@ interface CacheConfig {
  * The cache contract shared by the public service and every driver.
  *
  * Values are serialized JSON; `ttlSeconds` bounds freshness. Nullable reads use
- * `Option`; every operation is fallible and returns a `ResultAsync`.
+ * `Option`; every operation is fallible and returns an `Effect`.
  */
-interface CacheOperations {
-  /** Reads a cached value, or computes+stores it via `factory` on a miss. */
-  getOrSet<T>(key: string, ttlSeconds: number, factory: () => Promise<T>): ResultAsync<T, string>
-  /** Stores a value with a TTL. */
-  set<T>(key: string, value: T, ttlSeconds: number): ResultAsync<void, string>
-  /** Reads a value, `None` if absent. */
-  get<T>(key: string): ResultAsync<Option<T>, string>
-  /** Removes a value. */
-  delete(key: string): ResultAsync<void, string>
-}
+export interface CacheOperations {
+  /**
+   * Reads a cached value, or computes+stores it via `factory` on a miss.
+   *
+   * @param {string} key - Cache key.
+   * @param {number} ttlSeconds - Time-to-live in seconds.
+   * @param {() => Effect.Effect<A, CacheError>} factory - Value producer on miss.
+   *
+   * @returns {Effect.Effect<A, CacheError>} The cached or freshly-computed value.
+   */
+  getOrSet<A>(key: string, ttlSeconds: number, factory: () => Effect.Effect<A, CacheError>): Effect.Effect<A, CacheError>
 
-export type { CacheConfig, CacheOperations }
+  /**
+   * Stores a value with a TTL.
+   *
+   * @param {string} key - Cache key.
+   * @param {A} value - Value to store.
+   * @param {number} ttlSeconds - Time-to-live in seconds.
+   *
+   * @returns {Effect.Effect<void, CacheError>}
+   */
+  set<A>(key: string, value: A, ttlSeconds: number): Effect.Effect<void, CacheError>
+
+  /**
+   * Reads a value; `Option.none()` if absent.
+   *
+   * @param {string} key - Cache key.
+   *
+   * @returns {Effect.Effect<Option.Option<A>, CacheError>}
+   */
+  get<A>(key: string): Effect.Effect<Option.Option<A>, CacheError>
+
+  /**
+   * Removes a value.
+   *
+   * @param {string} key - Cache key.
+   *
+   * @returns {Effect.Effect<void, CacheError>}
+   */
+  delete(key: string): Effect.Effect<void, CacheError>
+}

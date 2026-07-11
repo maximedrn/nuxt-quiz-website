@@ -1,32 +1,33 @@
 import is from '@sindresorhus/is'
-import { err, ok, type Result } from 'neverthrow'
-import { CacheError } from '@/server/lib/cache/cache.error'
+import { Effect } from 'effect'
+import { CacheMessage } from '@/server/lib/cache/cache.message'
 import type { ICacheService } from '@/server/lib/cache/cache.interface'
+import { CacheError, type CacheConfig } from '@/server/lib/cache/cache.types'
 import { CacheService } from '@/server/lib/cache/cache.service'
-import type { CacheConfig } from '@/server/lib/cache/cache.types'
 import { BentoCacheDriver } from '@/server/lib/cache/drivers/cache.bentocache.driver'
+import { HttpStatus } from '@/server/lib/http/http.status'
 
 /**
  * Builds the cache service (memory L1 + Redis L2).
  *
  * The single entry point for cache construction. Validates the Redis URL before
- * wiring the BentoCache driver.
+ * wiring the BentoCache driver. Returns an `Effect` that fails with `CacheError`
+ * when the Redis URL is absent.
  *
  * @param {CacheConfig} config - Redis URL and optional L1 size.
  *
- * @returns {Result<ICacheService, string>} The service, or a config error.
+ * @returns {Effect.Effect<ICacheService, CacheError>} The service, or a config error.
  *
  * @example
  * ```ts
- * const result = createCache({ redisUrl: useEnv().config.redisUrl })
- * if (result.isErr()) throw createError({ statusCode: 500, statusMessage: result.error })
+ * const service = await Effect.runPromise(createCache({ redisUrl: useEnv().config.redisUrl }))
  * ```
  */
-function createCache(config: CacheConfig): Result<ICacheService, string> {
+function createCache(config: CacheConfig): Effect.Effect<ICacheService, CacheError> {
   if (!is.nonEmptyString(config.redisUrl)) {
-    return err(CacheError.OP_FAILED('createCache', 'REDIS_URL is required'))
+    return Effect.fail(new CacheError({ message: CacheMessage.REDIS_URL_MISSING, status: HttpStatus.INTERNAL }))
   }
-  return ok(new CacheService(new BentoCacheDriver(config)))
+  return Effect.succeed(new CacheService(new BentoCacheDriver(config)))
 }
 
 export { createCache }

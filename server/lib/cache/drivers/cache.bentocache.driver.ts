@@ -1,14 +1,12 @@
-import is from '@sindresorhus/is'
 import { BentoCache, bentostore } from 'bentocache'
 import { memoryDriver } from 'bentocache/drivers/memory'
 import { redisDriver } from 'bentocache/drivers/redis'
-import { Duration, Effect, Schedule } from 'effect'
+import { Duration, Effect, Option, Schedule } from 'effect'
 import { Redis } from 'ioredis'
-import { ResultAsync } from 'neverthrow'
-import { createNone, createSome, type Option } from 'option-t/plain_option'
-import { CacheError } from '@/server/lib/cache/cache.error'
-import type { CacheConfig } from '@/server/lib/cache/cache.types'
+import { CacheMessage } from '@/server/lib/cache/cache.message'
+import { CacheError, type CacheConfig } from '@/server/lib/cache/cache.types'
 import type { ICacheDriver } from '@/server/lib/cache/drivers/cache.driver.interface'
+import { HttpStatus } from '@/server/lib/http/http.status'
 
 const DEFAULT_L1_MAX_ITEMS = 500
 /** Per-op timeout and retry policy for the Redis (L2) tier. */
@@ -42,46 +40,87 @@ class BentoCacheDriver implements ICacheDriver {
   }
 
   /**
-   * Runs a Redis-touching thunk under an Effect timeout + retry, exposed as a
-   * `ResultAsync`.
+   * Runs a Redis-touching thunk under an Effect timeout + retry, tagging
+   * failures as `CacheError`.
    *
    * @param {string} op - Operation name for error messages.
-   * @param {() => Promise<T>} thunk - The cache interaction.
+   * @param {() => Promise<A>} thunk - The cache interaction.
    *
-   * @returns {ResultAsync<T, string>} The value, or a cache error.
+   * @returns {Effect.Effect<A, CacheError>} The value, or a tagged cache error.
    */
-  private run<T>(op: string, thunk: () => Promise<T>): ResultAsync<T, string> {
-    const effect = Effect.tryPromise({
+  private run<A>(op: string, thunk: () => Promise<A>): Effect.Effect<A, CacheError> {
+    return Effect.tryPromise({
       try: thunk,
-      catch: (err) => (err instanceof Error ? err : new Error(String(err))),
-    }).pipe(Effect.timeout(OP_TIMEOUT), Effect.retry(OP_RETRIES))
-
-    return ResultAsync.fromPromise(Effect.runPromise(effect), (err) =>
-      CacheError.OP_FAILED(op, err instanceof Error ? err.message : String(err)),
+      catch: (e): CacheError =>
+        new CacheError({ message: `${CacheMessage.OP_FAILED}: ${op}: ${String(e)}`, status: HttpStatus.INTERNAL }),
+    }).pipe(
+      Effect.timeout(OP_TIMEOUT),
+      Effect.retry(OP_RETRIES),
+      Effect.catchAll(
+        (e): Effect.Effect<A, CacheError> =>
+          Effect.fail(
+            e instanceof CacheError
+              ? e
+              : new CacheError({ message: `${CacheMessage.OP_FAILED}: ${op}`, status: HttpStatus.INTERNAL }),
+          ),
+      ),
     )
   }
 
-  getOrSet<T>(key: string, ttlSeconds: number, factory: () => Promise<T>): ResultAsync<T, string> {
-    return ResultAsync.fromPromise(
-      this.bento.getOrSet<T>({ key, factory, ttl: `${ttlSeconds}s` }),
-      (err) => CacheError.OP_FAILED('getOrSet', err instanceof Error ? err.message : String(err)),
+  /**
+   * Reads a cached value, or computes+stores it via `factory` on a miss.
+   *
+   * The `factory` is an Effect; BentoCache's stampede protection ensures it
+   * runs at most once per concurrent miss.
+   *
+   * @param {string} key - Cache key.
+   * @param {number} ttlSeconds - Time-to-live in seconds.
+   * @param {() => Effect.Effect<A, CacheError>} factory - Value producer on miss.
+   *
+   * @returns {Effect.Effect<A, CacheError>}
+   */
+  getOrSet<A>(key: string, ttlSeconds: number, factory: () => Effect.Effect<A, CacheError>): Effect.Effect<A, CacheError> {
+    return this.run('getOrSet', () =>
+      this.bento.getOrSet<A>({ key, ttl: `${ttlSeconds}s`, factory: () => Effect.runPromise(factory()) }),
     )
   }
 
-  set<T>(key: string, value: T, ttlSeconds: number): ResultAsync<void, string> {
+  /**
+   * Stores a value with a TTL.
+   *
+   * @param {string} key - Cache key.
+   * @param {A} value - Value to store.
+   * @param {number} ttlSeconds - Time-to-live in seconds.
+   *
+   * @returns {Effect.Effect<void, CacheError>}
+   */
+  set<A>(key: string, value: A, ttlSeconds: number): Effect.Effect<void, CacheError> {
     return this.run('set', async () => {
       await this.bento.set({ key, value, ttl: `${ttlSeconds}s` })
     })
   }
 
-  get<T>(key: string): ResultAsync<Option<T>, string> {
-    return this.run('get', async () => {
-      const value = await this.bento.get<T | undefined>({ key, defaultValue: undefined })
-      return is.undefined(value) ? createNone() : createSome(value)
-    })
+  /**
+   * Reads a value; `Option.none()` if absent.
+   *
+   * @param {string} key - Cache key.
+   *
+   * @returns {Effect.Effect<Option.Option<A>, CacheError>}
+   */
+  get<A>(key: string): Effect.Effect<Option.Option<A>, CacheError> {
+    return this.run('get', () => this.bento.get<A | undefined>({ key, defaultValue: undefined })).pipe(
+      Effect.map((v): Option.Option<A> => (v === undefined ? Option.none() : Option.some(v))),
+    )
   }
 
-  delete(key: string): ResultAsync<void, string> {
+  /**
+   * Removes a value.
+   *
+   * @param {string} key - Cache key.
+   *
+   * @returns {Effect.Effect<void, CacheError>}
+   */
+  delete(key: string): Effect.Effect<void, CacheError> {
     return this.run('delete', async () => {
       await this.bento.delete({ key })
     })

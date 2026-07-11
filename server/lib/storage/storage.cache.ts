@@ -1,21 +1,37 @@
+import { Effect } from 'effect'
 import { CacheKey, CacheTtl } from '@/server/lib/cache/cache.constants'
 import { useCache } from '@/server/lib/cache/cache.context'
-import { unwrapOrThrow } from '@/server/lib/http/http.result'
+import { CacheError } from '@/server/lib/cache/cache.types'
+import type { StorageError } from '@/server/lib/storage/storage.types'
 import type { StatsResult } from '@/shared/types'
+
+/**
+ * Adapts a `StorageError` into a `CacheError` so a storage-producing effect can
+ * be used as a cache `getOrSet` factory (whose error channel is `CacheError`).
+ *
+ * @param {StorageError} error - The storage failure.
+ *
+ * @returns {CacheError} The equivalent cache error (same message + status).
+ */
+function toCacheError(error: StorageError): CacheError {
+  return new CacheError({ message: error.message, status: error.status })
+}
 
 /**
  * Returns a user's stats from cache, computing+storing them on a miss.
  *
  * @param {number} userId - The user whose stats are wanted.
- * @param {() => Promise<StatsResult>} compute - Fallback that hits storage.
+ * @param {() => Effect.Effect<StatsResult, StorageError>} compute - Storage fallback.
  *
- * @returns {Promise<StatsResult>} The (possibly cached) stats.
+ * @returns {Effect.Effect<StatsResult, CacheError>} The (possibly cached) stats.
  */
 export function cachedStats(
   userId: number,
-  compute: () => Promise<StatsResult>,
-): Promise<StatsResult> {
-  return unwrapOrThrow(useCache().getOrSet(CacheKey.stats(userId), CacheTtl.STATS, compute))
+  compute: () => Effect.Effect<StatsResult, StorageError>,
+): Effect.Effect<StatsResult, CacheError> {
+  return useCache().getOrSet(CacheKey.stats(userId), CacheTtl.STATS, () =>
+    compute().pipe(Effect.mapError(toCacheError)),
+  )
 }
 
 /**
@@ -23,21 +39,23 @@ export function cachedStats(
  *
  * @param {number} userId - The user whose stats cache to drop.
  *
- * @returns {Promise<void>} Resolves once the key is dropped.
+ * @returns {Effect.Effect<void, CacheError>} Completes once the key is dropped.
  */
-export function invalidateStatsCache(userId: number): Promise<void> {
-  return unwrapOrThrow(useCache().delete(CacheKey.stats(userId)))
+export function invalidateStatsCache(userId: number): Effect.Effect<void, CacheError> {
+  return useCache().delete(CacheKey.stats(userId))
 }
 
 /**
  * Returns the question-bank count from cache, computing+storing it on a miss.
  *
- * @param {() => Promise<number>} compute - Fallback that hits storage.
+ * @param {() => Effect.Effect<number, StorageError>} compute - Storage fallback.
  *
- * @returns {Promise<number>} The (possibly cached) count.
+ * @returns {Effect.Effect<number, CacheError>} The (possibly cached) count.
  */
-export function cachedQuestionCount(compute: () => Promise<number>): Promise<number> {
-  return unwrapOrThrow(
-    useCache().getOrSet(CacheKey.questionCount(), CacheTtl.QUESTION_COUNT, compute),
+export function cachedQuestionCount(
+  compute: () => Effect.Effect<number, StorageError>,
+): Effect.Effect<number, CacheError> {
+  return useCache().getOrSet(CacheKey.questionCount(), CacheTtl.QUESTION_COUNT, () =>
+    compute().pipe(Effect.mapError(toCacheError)),
   )
 }
