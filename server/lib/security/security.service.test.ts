@@ -1,3 +1,4 @@
+import { Effect } from 'effect'
 import { RateLimiterMemory } from 'rate-limiter-flexible'
 import { describe, expect, it } from 'vitest'
 import { FlexibleRateLimitDriver } from '@/server/lib/security/drivers/security.flexible.driver'
@@ -12,7 +13,7 @@ function makeService(points: number): RateLimitService {
   return new RateLimitService(driver)
 }
 
-describe('RateLimitService', () => {
+describe('RateLimitService.', () => {
   /**
    * Requests within budget are allowed; the one that exhausts the budget is
    * blocked. This is the exact boundary the 429 middleware relies on.
@@ -20,13 +21,13 @@ describe('RateLimitService', () => {
   it('Allows up to the budget, then blocks.', async () => {
     const service = makeService(2)
 
-    const first = await service.consume('1.2.3.4', RateLimitKind.GLOBAL)
-    const second = await service.consume('1.2.3.4', RateLimitKind.GLOBAL)
-    const third = await service.consume('1.2.3.4', RateLimitKind.GLOBAL)
+    const first = await Effect.runPromise(service.consume('1.2.3.4', RateLimitKind.GLOBAL))
+    const second = await Effect.runPromise(service.consume('1.2.3.4', RateLimitKind.GLOBAL))
+    const third = await Effect.runPromise(service.consume('1.2.3.4', RateLimitKind.GLOBAL))
 
-    expect(first.isOk() && first.value.allowed).toBe(true)
-    expect(second.isOk() && second.value.allowed).toBe(true)
-    expect(third.isOk() && third.value.allowed).toBe(false)
+    expect(first.allowed).toBe(true)
+    expect(second.allowed).toBe(true)
+    expect(third.allowed).toBe(false)
   })
 
   /**
@@ -36,11 +37,11 @@ describe('RateLimitService', () => {
   it('Tracks budgets independently per key.', async () => {
     const service = makeService(1)
 
-    await service.consume('10.0.0.1', RateLimitKind.AUTH)
-    const blocked = await service.consume('10.0.0.1', RateLimitKind.AUTH)
-    const otherIp = await service.consume('10.0.0.2', RateLimitKind.AUTH)
+    await Effect.runPromise(service.consume('10.0.0.1', RateLimitKind.AUTH))
+    const blocked = await Effect.runPromise(service.consume('10.0.0.1', RateLimitKind.AUTH))
+    const otherIp = await Effect.runPromise(service.consume('10.0.0.2', RateLimitKind.AUTH))
 
-    expect(blocked.isOk() && blocked.value.allowed).toBe(false)
-    expect(otherIp.isOk() && otherIp.value.allowed).toBe(true)
+    expect(blocked.allowed).toBe(false)
+    expect(otherIp.allowed).toBe(true)
   })
 })

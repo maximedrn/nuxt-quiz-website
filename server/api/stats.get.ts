@@ -1,8 +1,9 @@
+import { Effect } from 'effect'
+import type { StatsResult } from '@/shared/types'
 import { requireUserId } from '@/server/lib/auth/auth.http'
-import { unwrapOrThrow } from '@/server/lib/http/http.result'
+import { runOrThrow } from '@/server/lib/http/http.run'
 import { cachedStats } from '@/server/lib/storage/storage.cache'
 import { useQuizStorage } from '@/server/lib/storage/storage.context'
-import type { StatsResult } from '@/shared/types'
 
 /**
  * Returns the authenticated user's aggregate stats (accuracy, streak, score
@@ -10,7 +11,11 @@ import type { StatsResult } from '@/shared/types'
  * identically across the Postgres and blockchain backends, and is cached.
  */
 export default defineEventHandler(async (event): Promise<StatsResult> => {
-  const userId = requireUserId(event)
+  const userId: number = requireUserId(event)
   const storage = await useQuizStorage()
-  return cachedStats(userId, () => unwrapOrThrow(storage.getStats(userId)))
+  return runOrThrow(
+    Effect.gen(function* () {
+      return yield* cachedStats(userId, () => storage.getStats(userId))
+    }),
+  )
 })

@@ -1,3 +1,4 @@
+import { Effect } from 'effect'
 import { RateLimitKind } from '@/server/lib/security/security.constants'
 import { useSecurity } from '@/server/lib/security/security.context'
 
@@ -17,11 +18,15 @@ export default defineEventHandler(async (event) => {
   const ip = getRequestIP(event, { xForwardedFor: true }) ?? 'unknown'
   const kind = path.startsWith('/api/auth/') ? RateLimitKind.AUTH : RateLimitKind.GLOBAL
 
-  const result = await useSecurity().consume(ip, kind)
-  if (result.isErr()) return
+  // Fails open: SecurityError (e.g. Redis blip) lets the request through.
+  const result = await Effect.runPromise(
+    useSecurity().consume(ip, kind).pipe(Effect.option),
+  )
+  if (result._tag === 'None') return
 
-  if (!result.value.allowed) {
-    setResponseHeader(event, 'Retry-After', Math.ceil(result.value.msBeforeNext / 1000))
+  const { allowed, msBeforeNext } = result.value
+  if (!allowed) {
+    setResponseHeader(event, 'Retry-After', Math.ceil(msBeforeNext / 1000))
     throw createError({ statusCode: 429, statusMessage: 'Too many requests — please slow down.' })
   }
 })

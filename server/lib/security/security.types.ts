@@ -1,5 +1,13 @@
-import type { ResultAsync } from 'neverthrow'
+import { Data } from 'effect'
+import type { Effect } from 'effect'
+import { HttpStatus } from '@/server/lib/http/http.status'
 import type { RateLimitKind } from '@/server/lib/security/security.constants'
+
+/** Tagged error for security domain failures. */
+export class SecurityError extends Data.TaggedError('SecurityError')<{
+  readonly message: string
+  readonly status: HttpStatus
+}> {}
 
 /** Which limiter a request is charged against. */
 type RateLimitKindValue = (typeof RateLimitKind)[keyof typeof RateLimitKind]
@@ -31,8 +39,13 @@ interface SecurityConfig {
 interface SecurityOperations {
   /**
    * Charges one point against the limiter of `kind` for `key` (typically an IP).
+   *
+   * @param {string} key - The key to rate-limit (typically an IP address).
+   * @param {RateLimitKindValue} kind - Which limiter to charge against.
+   *
+   * @returns {Effect.Effect<RateLimitResult, SecurityError>} The result or a security error.
    */
-  consume(key: string, kind: RateLimitKindValue): ResultAsync<RateLimitResult, string>
+  consume(key: string, kind: RateLimitKindValue): Effect.Effect<RateLimitResult, SecurityError>
 }
 
 export type {

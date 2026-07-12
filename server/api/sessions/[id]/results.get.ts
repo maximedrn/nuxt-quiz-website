@@ -1,9 +1,13 @@
+import { Effect } from 'effect'
+import type { ReviewItem, SessionResultsResult } from '@/shared/types'
 import { requireUserId } from '@/server/lib/auth/auth.http'
-import { unwrapOrThrow } from '@/server/lib/http/http.result'
-import { getOwnedSessionOrThrow, toSessionSummary } from '@/server/lib/quiz/quiz.session'
+import { HttpStatus } from '@/server/lib/http/http.status'
+import { runOrThrow } from '@/server/lib/http/http.run'
+import { getOwnedSession, toSessionSummary } from '@/server/lib/quiz/quiz.session'
+import { QuizError } from '@/server/lib/quiz/quiz.types'
+import { QuizMessage } from '@/server/lib/quiz/quiz.message'
 import { parseSessionId } from '@/server/lib/quiz/quiz.validation'
 import { useQuizStorage } from '@/server/lib/storage/storage.context'
-import type { ReviewItem, SessionResultsResult } from '@/shared/types'
 
 /**
  * Returns the full post-session review: every question with its options, the
@@ -11,50 +15,55 @@ import type { ReviewItem, SessionResultsResult } from '@/shared/types'
  * sessions.
  */
 export default defineEventHandler(async (event): Promise<SessionResultsResult> => {
-  const userId = requireUserId(event)
-  const id = parseSessionId(getRouterParam(event, 'id'))
+  const userId: number = requireUserId(event)
   const storage = await useQuizStorage()
+  return runOrThrow(
+    Effect.gen(function* () {
+      const id = yield* parseSessionId(getRouterParam(event, 'id'))
+      const session = yield* getOwnedSession(storage, id, userId)
 
-  const session = await getOwnedSessionOrThrow(storage, id, userId)
-  if (session.status !== 'completed') {
-    throw createError({ statusCode: 409, statusMessage: 'This session is not finished yet.' })
-  }
+      if (session.status !== 'completed')
+        return yield* Effect.fail(
+          new QuizError({ message: QuizMessage.ALREADY_COMPLETED, status: HttpStatus.CONFLICT }),
+        )
 
-  const answers = await unwrapOrThrow(storage.listAnswers(id))
-  const answerByQuestionId = new Map(answers.map((a) => [a.questionId, a]))
+      const answers = yield* storage.listAnswers(id)
+      const answerByQuestionId = new Map(answers.map((a) => [a.questionId, a]))
 
-  const questionRows =
-    session.questionIds.length > 0
-      ? await unwrapOrThrow(storage.getQuestionsByIds(session.questionIds))
-      : []
-  const questionById = new Map(questionRows.map((q) => [q.id, q]))
+      const questionRows =
+        session.questionIds.length > 0 ? yield* storage.getQuestionsByIds(session.questionIds) : []
+      const questionById = new Map(questionRows.map((q) => [q.id, q]))
 
-  const items: ReviewItem[] = session.questionIds.map((qid) => {
-    const question = questionById.get(qid)
-    const answer = answerByQuestionId.get(qid)
-    if (!question || !answer) {
-      throw createError({
-        statusCode: 500,
-        statusMessage: `Missing data for question ${qid} in session ${id}.`,
-      })
-    }
-    return {
-      number: question.number,
-      title: question.title,
-      question: question.question,
-      code: question.code,
-      options: {
-        A: question.optionA,
-        B: question.optionB,
-        C: question.optionC,
-        D: question.optionD,
-      },
-      correctAnswer: question.correctAnswer,
-      explanation: question.explanation,
-      selected: answer.selected,
-      isCorrect: answer.isCorrect,
-    }
-  })
+      const items: ReviewItem[] = []
+      for (const qid of session.questionIds) {
+        const question = questionById.get(qid)
+        const answer = answerByQuestionId.get(qid)
+        if (!question || !answer)
+          return yield* Effect.fail(
+            new QuizError({
+              message: `${QuizMessage.SESSION_NOT_FOUND}: missing data for question ${qid} in session ${id}`,
+              status: HttpStatus.INTERNAL,
+            }),
+          )
+        items.push({
+          number: question.number,
+          title: question.title,
+          question: question.question,
+          code: question.code,
+          options: {
+            A: question.optionA,
+            B: question.optionB,
+            C: question.optionC,
+            D: question.optionD,
+          },
+          correctAnswer: question.correctAnswer,
+          explanation: question.explanation,
+          selected: answer.selected,
+          isCorrect: answer.isCorrect,
+        })
+      }
 
-  return { session: toSessionSummary(session, answers.length), items }
+      return { session: toSessionSummary(session, answers.length), items }
+    }),
+  )
 })

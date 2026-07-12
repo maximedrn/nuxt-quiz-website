@@ -1,32 +1,34 @@
 import is from '@sindresorhus/is'
+import { Effect } from 'effect'
 import { Redis } from 'ioredis'
-import { err, ok, type Result } from 'neverthrow'
 import { RateLimiterRedis } from 'rate-limiter-flexible'
 import { FlexibleRateLimitDriver } from '@/server/lib/security/drivers/security.flexible.driver'
 import { RateLimitPrefix } from '@/server/lib/security/security.constants'
-import { SecurityError } from '@/server/lib/security/security.error'
+import { SecurityMessage } from '@/server/lib/security/security.message'
 import type { IRateLimitService } from '@/server/lib/security/security.interface'
 import { RateLimitService } from '@/server/lib/security/security.service'
-import type { SecurityConfig } from '@/server/lib/security/security.types'
+import { SecurityError, type SecurityConfig } from '@/server/lib/security/security.types'
+import { HttpStatus } from '@/server/lib/http/http.status'
 
 /**
  * Builds the rate-limit service backed by Redis.
  *
  * The single entry point for rate-limit construction. Creates a global throttle
- * and a stricter auth limiter, both keyed per IP.
+ * and a stricter auth limiter, both keyed per IP. Returns an `Effect` that fails
+ * with `SecurityError` when the Redis URL is absent.
  *
  * @param {SecurityConfig} config - Redis URL and both limiter budgets.
  *
- * @returns {Result<IRateLimitService, string>} The service, or a config error.
+ * @returns {Effect.Effect<IRateLimitService, SecurityError>} The service, or a config error.
  *
  * @example
  * ```ts
- * const result = createSecurity({ redisUrl, global: {...}, auth: {...} })
+ * const service = await Effect.runPromise(createSecurity({ redisUrl, global: {...}, auth: {...} }))
  * ```
  */
-function createSecurity(config: SecurityConfig): Result<IRateLimitService, string> {
+function createSecurity(config: SecurityConfig): Effect.Effect<IRateLimitService, SecurityError> {
   if (!is.nonEmptyString(config.redisUrl)) {
-    return err(SecurityError.CONSUME_FAILED('REDIS_URL is required'))
+    return Effect.fail(new SecurityError({ message: SecurityMessage.REDIS_URL_MISSING, status: HttpStatus.INTERNAL }))
   }
   const storeClient = new Redis(config.redisUrl, { maxRetriesPerRequest: 2 })
   const driver = new FlexibleRateLimitDriver({
@@ -43,7 +45,7 @@ function createSecurity(config: SecurityConfig): Result<IRateLimitService, strin
       duration: config.auth.duration,
     }),
   })
-  return ok(new RateLimitService(driver))
+  return Effect.succeed(new RateLimitService(driver))
 }
 
 export { createSecurity }

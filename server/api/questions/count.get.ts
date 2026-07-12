@@ -1,4 +1,5 @@
-import { unwrapOrThrow } from '@/server/lib/http/http.result'
+import { Effect } from 'effect'
+import { runOrThrow } from '@/server/lib/http/http.run'
 import { cachedQuestionCount } from '@/server/lib/storage/storage.cache'
 import { useQuizStorage } from '@/server/lib/storage/storage.context'
 
@@ -8,5 +9,10 @@ import { useQuizStorage } from '@/server/lib/storage/storage.context'
  */
 export default defineEventHandler(async (): Promise<{ count: number }> => {
   const storage = await useQuizStorage()
-  return { count: await cachedQuestionCount(() => unwrapOrThrow(storage.countQuestions())) }
+  return runOrThrow(
+    Effect.gen(function* () {
+      const count = yield* cachedQuestionCount(() => storage.countQuestions())
+      return { count }
+    }),
+  )
 })

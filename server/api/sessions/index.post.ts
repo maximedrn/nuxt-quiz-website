@@ -1,10 +1,14 @@
+import { Effect } from 'effect'
 import { match } from 'ts-pattern'
-import { requireUserId } from '@/server/lib/auth/auth.http'
-import { unwrapOrThrow } from '@/server/lib/http/http.result'
-import { shuffle } from '@/server/lib/quiz/quiz.question'
-import { createSessionSchema, parseOr400 } from '@/server/lib/quiz/quiz.validation'
-import { useQuizStorage } from '@/server/lib/storage/storage.context'
 import type { CreateSessionResult } from '@/shared/types'
+import { requireUserId } from '@/server/lib/auth/auth.http'
+import { HttpStatus } from '@/server/lib/http/http.status'
+import { runOrThrow } from '@/server/lib/http/http.run'
+import { shuffle } from '@/server/lib/quiz/quiz.question'
+import { createSessionSchema, decodeOr400 } from '@/server/lib/quiz/quiz.validation'
+import { QuizError } from '@/server/lib/quiz/quiz.types'
+import { QuizMessage } from '@/server/lib/quiz/quiz.message'
+import { useQuizStorage } from '@/server/lib/storage/storage.context'
 
 /**
  * Creates a new training session for the authenticated user.
@@ -13,34 +17,24 @@ import type { CreateSessionResult } from '@/shared/types'
  * a random shuffle) so the session stays reproducible even if the bank changes.
  */
 export default defineEventHandler(async (event): Promise<CreateSessionResult> => {
-  const userId = requireUserId(event)
+  const userId: number = requireUserId(event)
+  const body: unknown = await readBody(event)
   const storage = await useQuizStorage()
-
-  const input = parseOr400(createSessionSchema, await readBody(event))
-
-  const refs = await unwrapOrThrow(storage.listQuestionRefs())
-  if (refs.length === 0) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'No questions in the database yet — run `bun run db:seed` first.',
-    })
-  }
-  if (input.size > refs.length) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: `size must be between 1 and ${refs.length}`,
-    })
-  }
-
-  const ordered = match(input.mode)
-    .with('sequential', () => [...refs].sort((a, b) => a.number - b.number))
-    .with('random', () => shuffle(refs))
-    .exhaustive()
-
-  const questionIds = ordered.slice(0, input.size).map((r) => r.id)
-
-  const session = await unwrapOrThrow(
-    storage.createSession({ userId, questionIds, mode: input.mode }),
+  return runOrThrow(
+    Effect.gen(function* () {
+      const input = yield* decodeOr400(createSessionSchema, body)
+      const refs = yield* storage.listQuestionRefs()
+      if (refs.length === 0)
+        return yield* Effect.fail(new QuizError({ message: QuizMessage.NO_QUESTIONS, status: HttpStatus.INTERNAL }))
+      if (input.size > refs.length)
+        return yield* Effect.fail(new QuizError({ message: `${QuizMessage.SIZE_RANGE}: 1..${refs.length}`, status: HttpStatus.BAD_REQUEST }))
+      const ordered = match(input.mode)
+        .with('sequential', () => [...refs].sort((a, b) => a.number - b.number))
+        .with('random', () => shuffle(refs))
+        .exhaustive()
+      const questionIds: number[] = ordered.slice(0, input.size).map((r) => r.id)
+      const session = yield* storage.createSession({ userId, questionIds, mode: input.mode })
+      return { id: session.id }
+    }),
   )
-  return { id: session.id }
 })

@@ -1,62 +1,69 @@
-import { z } from 'zod'
+import { Effect, Schema } from 'effect'
+import { HttpStatus } from '@/server/lib/http/http.status'
+import { QuizMessage } from '@/server/lib/quiz/quiz.message'
+import { QuizError } from '@/server/lib/quiz/quiz.types'
 import { AnswerLetter, SessionMode } from '@/shared/types'
 
-/** Zod schema for a single answer letter. */
-const answerLetterSchema = z.enum(AnswerLetter)
+/** Schema for a single answer letter. */
+const answerLetterSchema = Schema.Literal(AnswerLetter.A, AnswerLetter.B, AnswerLetter.C, AnswerLetter.D)
 
-/** Zod schema for a session mode. */
-const sessionModeSchema = z.enum(SessionMode)
+/** Schema for a session mode. */
+const sessionModeSchema = Schema.Literal(SessionMode.SEQUENTIAL, SessionMode.RANDOM)
 
 /** Body schema for creating a session. `size` upper bound is checked per-request. */
-const createSessionSchema = z.object({
+const createSessionSchema = Schema.Struct({
   mode: sessionModeSchema,
-  size: z.coerce.number().int().positive(),
+  size: Schema.NumberFromString.pipe(Schema.int(), Schema.positive()),
 })
 
 /** Body schema for submitting an answer. */
-const submitAnswerSchema = z.object({
-  questionId: z.coerce.number().int().positive(),
+const submitAnswerSchema = Schema.Struct({
+  questionId: Schema.NumberFromString.pipe(Schema.int(), Schema.positive()),
   selected: answerLetterSchema,
 })
 
 /**
- * Parses and validates a value against a Zod schema, throwing a 400 on failure.
+ * Decodes a value against an `effect/Schema`, failing with a 400 `QuizError` on parse failure.
  *
- * Uses `safeParse` (never throws) and converts a failure into an H3 400 with
- * the first Zod issue message — keeping route handlers free of try/catch.
+ * Replaces the old `parseOr400` (Zod-based) without throwing — callers receive a typed
+ * `Effect` and handle the error path explicitly.
  *
- * @param {z.ZodType<T>} schema - The schema to validate against.
+ * @param {Schema.Schema<A, I>} schema - The schema to decode against.
  * @param {unknown} value - The raw value (body, param, query).
  *
- * @returns {T} The parsed, typed value.
+ * @returns {Effect.Effect<A, QuizError>} The decoded value or a 400 QuizError.
+ *
+ * @example
+ * ```ts
+ * const body = yield* decodeOr400(createSessionSchema, rawBody)
+ * ```
  */
-function parseOr400<T>(schema: z.ZodType<T>, value: unknown): T {
-  const result = schema.safeParse(value)
-  if (!result.success) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: result.error.issues[0]?.message ?? 'Invalid input',
-    })
-  }
-  return result.data
+function decodeOr400<A, I>(schema: Schema.Schema<A, I>, value: unknown): Effect.Effect<A, QuizError> {
+  return Schema.decodeUnknown(schema)(value).pipe(
+    Effect.mapError(
+      (e): QuizError =>
+        new QuizError({
+          message: `${QuizMessage.INVALID_INPUT}: ${e.message}`,
+          status: HttpStatus.BAD_REQUEST,
+        }),
+    ),
+  )
 }
 
 /**
- * Parses a route param into a positive session id, throwing 400 on failure.
+ * Parses a route param into a positive session id, failing with a 400 `QuizError` on failure.
  *
- * @param {unknown} value - Raw router param.
+ * @param {string | undefined} value - Raw router param.
  *
- * @returns {number} The validated session id.
+ * @returns {Effect.Effect<number, QuizError>} The validated session id or a 400 QuizError.
+ *
+ * @example
+ * ```ts
+ * const id = yield* parseSessionId(event.context.params?.id)
+ * ```
  */
-function parseSessionId(value: string | undefined): number {
-  return parseOr400(z.coerce.number().int().positive(), value)
+function parseSessionId(value: string | undefined): Effect.Effect<number, QuizError> {
+  return decodeOr400(Schema.NumberFromString.pipe(Schema.int(), Schema.positive()), value)
 }
 
-export {
-  answerLetterSchema,
-  createSessionSchema,
-  parseOr400,
-  parseSessionId,
-  sessionModeSchema,
-  submitAnswerSchema,
-}
+export { answerLetterSchema, createSessionSchema, decodeOr400, parseSessionId, sessionModeSchema, submitAnswerSchema }
