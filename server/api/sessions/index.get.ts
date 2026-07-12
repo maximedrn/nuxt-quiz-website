@@ -1,6 +1,6 @@
 import { Effect } from 'effect'
 import type { SessionSummary } from '@/shared/types'
-import { requireUserId } from '@/server/lib/auth/auth.http'
+import { requireUserId } from '@/server/lib/auth/auth.session'
 import { runOrThrow } from '@/server/lib/http/http.run'
 import { toSessionSummary } from '@/server/lib/quiz/quiz.session'
 import { useQuizStorage } from '@/server/lib/storage/storage.context'
@@ -10,7 +10,7 @@ import { useQuizStorage } from '@/server/lib/storage/storage.context'
  * answered-question count.
  */
 export default defineEventHandler(async (event): Promise<SessionSummary[]> => {
-  const userId: number = requireUserId(event)
+  const userId: number = await requireUserId(event)
   const storage = await useQuizStorage()
   return runOrThrow(
     Effect.gen(function* () {

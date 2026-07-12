@@ -1,6 +1,6 @@
 import { Effect } from 'effect'
 import type { StatsResult } from '@/shared/types'
-import { requireUserId } from '@/server/lib/auth/auth.http'
+import { requireUserId } from '@/server/lib/auth/auth.session'
 import { runOrThrow } from '@/server/lib/http/http.run'
 import { cachedStats } from '@/server/lib/storage/storage.cache'
 import { useQuizStorage } from '@/server/lib/storage/storage.context'
@@ -11,7 +11,7 @@ import { useQuizStorage } from '@/server/lib/storage/storage.context'
  * identically across the Postgres and blockchain backends, and is cached.
  */
 export default defineEventHandler(async (event): Promise<StatsResult> => {
-  const userId: number = requireUserId(event)
+  const userId: number = await requireUserId(event)
   const storage = await useQuizStorage()
   return runOrThrow(
     Effect.gen(function* () {

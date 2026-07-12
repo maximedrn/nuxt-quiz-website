@@ -1,19 +1,16 @@
 /**
- * Global route guard: requires an authenticated user for every page except
+ * Global route guard: requires an authenticated session for every page except
  * `/login`.
  *
- * Runs client-side only (the access token lives in memory). If there's no token
- * yet, it attempts a silent refresh from the cookie before redirecting to login.
+ * Runs client-side only (session state lives in the cookie). On first load
+ * `loggedIn` may be false until `fetch()` reads the cookie from the server;
+ * we call it once and redirect if still unauthenticated.
  */
 export default defineNuxtRouteMiddleware(async (to) => {
   if (import.meta.server) return
   if (to.path === '/login') return
 
-  const { isAuthed, refresh } = useAuth()
-  if (isAuthed.value) return
-
-  const recovered = await refresh()
-  if (!recovered) {
-    return navigateTo('/login')
-  }
+  const { loggedIn, fetch } = useUserSession()
+  if (!loggedIn.value) await fetch()
+  if (!loggedIn.value) return navigateTo('/login')
 })

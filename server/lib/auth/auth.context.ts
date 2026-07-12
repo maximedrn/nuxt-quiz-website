@@ -1,23 +1,24 @@
 import { createAuth } from '@/server/lib/auth/auth.factory'
 import type { IAuthService } from '@/server/lib/auth/auth.interface'
-import { useCache } from '@/server/lib/cache/cache.context'
 import { useDatabase } from '@/server/lib/database/database.context'
 import { useEnv } from '@/server/lib/env/env.context'
 
 let _auth: IAuthService | undefined
 
 /**
- * Lazily-built, process-wide auth service.
+ * Lazily-built, process-wide auth credential service.
+ *
+ * Wires the shared database client and the dedicated lookup pepper from the
+ * validated environment.
  *
  * @returns {IAuthService} The auth service.
  */
 export function useAuth(): IAuthService {
   if (!_auth) {
-    const result = createAuth(useEnv().config, useCache(), useDatabase().db)
-    if (result.isErr()) {
-      throw createError({ statusCode: 500, statusMessage: result.error })
-    }
-    _auth = result.value
+    _auth = createAuth({
+      db: useDatabase().db,
+      config: { lookupPepper: useEnv().config.authLookupPepper },
+    })
   }
   return _auth
 }

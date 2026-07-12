@@ -1,6 +1,6 @@
 import { Effect } from 'effect'
 import type { SubmitAnswerResult } from '@/shared/types'
-import { requireUserId } from '@/server/lib/auth/auth.http'
+import { requireUserId } from '@/server/lib/auth/auth.session'
 import { HttpStatus } from '@/server/lib/http/http.status'
 import { runOrThrow } from '@/server/lib/http/http.run'
 import { getOwnedSession } from '@/server/lib/quiz/quiz.session'
@@ -18,7 +18,7 @@ import { useQuizStorage } from '@/server/lib/storage/storage.context'
  * Grades against the stored key and returns the correct answer + explanation.
  */
 export default defineEventHandler(async (event): Promise<SubmitAnswerResult> => {
-  const userId: number = requireUserId(event)
+  const userId: number = await requireUserId(event)
   const body: unknown = await readBody(event)
   const storage = await useQuizStorage()
   return runOrThrow(

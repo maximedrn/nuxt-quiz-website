@@ -1,10 +1,10 @@
-import { requireUserId } from '@/server/lib/auth/auth.http'
 import type { MeResult } from '@/shared/types'
+import { requireUserId } from '@/server/lib/auth/auth.session'
 
 /**
- * Returns the authenticated user's id. The client uses this to check whether a
- * stored/refreshed access token is still valid on load.
+ * Returns the authenticated user's id (throws 401 if no valid session). The
+ * client uses this to check whether the session cookie is still valid on load.
  */
-export default defineEventHandler((event): MeResult => {
-  return { userId: requireUserId(event) }
+export default defineEventHandler(async (event): Promise<MeResult> => {
+  return { userId: await requireUserId(event) }
 })

@@ -15,8 +15,6 @@ const StorageDriverKind = {
 const EnvDefaults = {
   REDIS_URL: 'redis://localhost:6379',
   STORAGE_DRIVER: StorageDriverKind.POSTGRES,
-  /** Access token lifetime, seconds (15 min). */
-  ACCESS_TOKEN_TTL: 900,
   /** Global rate-limit budget per IP per window. */
   RATE_LIMIT_POINTS: 100,
   RATE_LIMIT_DURATION: 60,

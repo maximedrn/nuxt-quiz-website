@@ -1,8 +1,6 @@
-/** Result of a successful register/login/refresh — the client keeps the access token in memory. */
+/** Result of a successful register/login — the user id now backing the sealed session. */
 export interface AuthResult {
-  accessToken: string
-  /** Access token lifetime in seconds. */
-  expiresIn: number
+  userId: number
 }
 
 /** Identity of the currently signed-in user. */

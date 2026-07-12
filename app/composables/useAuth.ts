@@ -1,51 +1,52 @@
-import is from '@sindresorhus/is'
-import { ResultAsync } from 'neverthrow'
-import type { AuthResult } from '@/shared/types'
-
 /**
- * Client-side auth state and flows.
+ * Client-side auth state and flows, backed by `nuxt-auth-utils` sealed sessions.
  *
- * The access token is kept in memory (Nuxt `useState`); the refresh token is an
- * httpOnly cookie the browser sends automatically. Flows use neverthrow so
- * callers branch on `isErr()` instead of try/catch.
+ * The session cookie is set/cleared server-side automatically. `useUserSession()`
+ * is the source of truth for `loggedIn` / `user`. Callers handle errors via
+ * `.catch` on the returned promise.
  *
- * @returns Reactive `accessToken`/`isAuthed` and register/login/refresh/logout.
+ * @returns Reactive `isAuthed`/`user` and register/login/logout flows.
  */
 export function useAuth() {
-  const accessToken = useState<string | null>('auth:accessToken', () => null)
-  const isAuthed = computed(() => is.nonEmptyString(accessToken.value))
+  const { loggedIn, user, fetch, clear } = useUserSession()
 
-  const submit = (path: string, code: string) =>
-    ResultAsync.fromPromise(
-      $fetch<AuthResult>(path, { method: 'POST', body: { code } }),
-      (error) => error,
-    ).map((result) => {
-      accessToken.value = result.accessToken
-      return result
-    })
+  const isAuthed: typeof loggedIn = loggedIn
 
-  const register = (code: string) => submit('/api/auth/register', code)
-  const login = (code: string) => submit('/api/auth/login', code)
-
-  /** Attempts a silent refresh from the cookie. Returns whether it succeeded. */
-  const refresh = async (): Promise<boolean> => {
-    const result = await ResultAsync.fromPromise(
-      $fetch<AuthResult>('/api/auth/refresh', { method: 'POST' }),
-      (error) => error,
-    )
-    if (result.isErr()) {
-      accessToken.value = null
-      return false
-    }
-    accessToken.value = result.value.accessToken
-    return true
+  /**
+   * Registers a new account with `code` and syncs the session from the cookie.
+   *
+   * @param {string} code - 8-digit registration code.
+   *
+   * @returns {Promise<void>} Resolves on success; rejects with `FetchError` on failure.
+   */
+  const register = async (code: string): Promise<void> => {
+    await $fetch('/api/auth/register', { method: 'POST', body: { code } })
+    await fetch()
   }
 
+  /**
+   * Logs in with `code` and syncs the session from the cookie.
+   *
+   * @param {string} code - 8-digit login code.
+   *
+   * @returns {Promise<void>} Resolves on success; rejects with `FetchError` on failure.
+   */
+  const login = async (code: string): Promise<void> => {
+    await $fetch('/api/auth/login', { method: 'POST', body: { code } })
+    await fetch()
+  }
+
+  /**
+   * Logs out by clearing the server session cookie, resetting client state,
+   * then redirecting to `/login`.
+   *
+   * @returns {Promise<void>}
+   */
   const logout = async (): Promise<void> => {
-    await ResultAsync.fromPromise($fetch('/api/auth/logout', { method: 'POST' }), (error) => error)
-    accessToken.value = null
+    await $fetch('/api/auth/logout', { method: 'POST' })
+    await clear()
     await navigateTo('/login')
   }
 
-  return { accessToken, isAuthed, register, login, refresh, logout }
+  return { isAuthed, user, register, login, logout }
 }

@@ -1,5 +1,3 @@
-import { ResultAsync } from 'neverthrow'
-import { FetchError } from 'ofetch'
 import type {
   CreateSessionInput,
   CreateSessionResult,
@@ -12,61 +10,87 @@ import type {
   SubmitAnswerResult,
 } from '@/shared/types'
 
-/** The subset of `$fetch` options the quiz API uses. */
-interface ApiOptions {
-  method?: 'GET' | 'POST'
-  body?: object
-  headers?: Record<string, string>
-}
-
-/** Thin, fully-typed wrapper around the quiz API with bearer auth + 401 retry. */
+/**
+ * Thin, fully-typed wrapper around the quiz API.
+ *
+ * Auth is carried by the session cookie automatically — no bearer header, no
+ * refresh logic. `$fetch` rejects on HTTP errors; callers handle via `.catch`.
+ *
+ * @returns Typed API methods for sessions, answers, stats, and questions.
+ */
 export function useApi() {
-  const { accessToken, refresh } = useAuth()
-
-  /** Builds request options with the current access token attached. */
-  const withAuth = (opts?: ApiOptions): ApiOptions => ({
-    ...opts,
-    headers: {
-      ...(opts?.headers ?? {}),
-      ...(accessToken.value ? { Authorization: `Bearer ${accessToken.value}` } : {}),
-    },
-  })
-
-  /**
-   * Fetches with the access token; on a 401 it refreshes once and retries.
-   *
-   * @param {string} url - Endpoint path.
-   * @param {ApiOptions} opts - `$fetch` options.
-   *
-   * @returns {Promise<T>} The typed response.
-   */
-  const apiFetch = async <T>(url: string, opts?: ApiOptions): Promise<T> => {
-    const attempt = () => ResultAsync.fromPromise($fetch<T>(url, withAuth(opts)), (error) => error)
-
-    const first = await attempt()
-    if (first.isOk()) return first.value
-
-    const status = first.error instanceof FetchError ? first.error.statusCode : undefined
-    if (status === 401 && (await refresh())) {
-      const retry = await attempt()
-      if (retry.isOk()) return retry.value
-      throw retry.error
-    }
-    throw first.error
-  }
-
   return {
-    createSession: (input: CreateSessionInput) =>
-      apiFetch<CreateSessionResult>('/api/sessions', { method: 'POST', body: input }),
-    getSessionState: (id: number) => apiFetch<SessionStateResult>(`/api/sessions/${id}`),
-    submitAnswer: (id: number, input: SubmitAnswerInput) =>
-      apiFetch<SubmitAnswerResult>(`/api/sessions/${id}/answer`, { method: 'POST', body: input }),
-    finishSession: (id: number) =>
-      apiFetch<FinishSessionResult>(`/api/sessions/${id}/finish`, { method: 'POST' }),
-    getSessionResults: (id: number) =>
-      apiFetch<SessionResultsResult>(`/api/sessions/${id}/results`),
-    listSessions: () => apiFetch<SessionSummary[]>('/api/sessions'),
-    getStats: () => apiFetch<StatsResult>('/api/stats'),
-    getQuestionCount: () => apiFetch<{ count: number }>('/api/questions/count'),
+    /**
+     * Creates a new quiz session.
+     *
+     * @param {CreateSessionInput} input - Session configuration.
+     *
+     * @returns {Promise<CreateSessionResult>}
+     */
+    createSession: (input: CreateSessionInput): Promise<CreateSessionResult> =>
+      $fetch<CreateSessionResult>('/api/sessions', { method: 'POST', body: input }),
+
+    /**
+     * Fetches the current state of a session.
+     *
+     * @param {number} id - Session ID.
+     *
+     * @returns {Promise<SessionStateResult>}
+     */
+    getSessionState: (id: number): Promise<SessionStateResult> =>
+      $fetch<SessionStateResult>(`/api/sessions/${id}`),
+
+    /**
+     * Submits an answer for the current question in a session.
+     *
+     * @param {number} id - Session ID.
+     * @param {SubmitAnswerInput} input - Selected answer.
+     *
+     * @returns {Promise<SubmitAnswerResult>}
+     */
+    submitAnswer: (id: number, input: SubmitAnswerInput): Promise<SubmitAnswerResult> =>
+      $fetch<SubmitAnswerResult>(`/api/sessions/${id}/answer`, { method: 'POST', body: input }),
+
+    /**
+     * Marks a session as finished.
+     *
+     * @param {number} id - Session ID.
+     *
+     * @returns {Promise<FinishSessionResult>}
+     */
+    finishSession: (id: number): Promise<FinishSessionResult> =>
+      $fetch<FinishSessionResult>(`/api/sessions/${id}/finish`, { method: 'POST' }),
+
+    /**
+     * Retrieves the scored results of a completed session.
+     *
+     * @param {number} id - Session ID.
+     *
+     * @returns {Promise<SessionResultsResult>}
+     */
+    getSessionResults: (id: number): Promise<SessionResultsResult> =>
+      $fetch<SessionResultsResult>(`/api/sessions/${id}/results`),
+
+    /**
+     * Lists all sessions for the current user.
+     *
+     * @returns {Promise<SessionSummary[]>}
+     */
+    listSessions: (): Promise<SessionSummary[]> => $fetch<SessionSummary[]>('/api/sessions'),
+
+    /**
+     * Fetches global quiz statistics.
+     *
+     * @returns {Promise<StatsResult>}
+     */
+    getStats: (): Promise<StatsResult> => $fetch<StatsResult>('/api/stats'),
+
+    /**
+     * Returns the total number of questions in the bank.
+     *
+     * @returns {Promise<{ count: number }>}
+     */
+    getQuestionCount: (): Promise<{ count: number }> =>
+      $fetch<{ count: number }>('/api/questions/count'),
   }
 }

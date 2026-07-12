@@ -20,17 +20,15 @@ async function run(kind: 'login' | 'register') {
     return
   }
   pending.value = true
-  const result = await (kind === 'login' ? login : register)(code.value)
+  await (kind === 'login' ? login : register)(code.value)
+    .then(() => navigateTo('/'))
+    .catch((err: unknown) => {
+      error.value =
+        err instanceof FetchError && is.plainObject(err.data) && is.string(err.data.statusMessage)
+          ? err.data.statusMessage
+          : t(TranslationKey.LoginInvalidCode)
+    })
   pending.value = false
-  if (result.isErr()) {
-    const err = result.error
-    error.value =
-      err instanceof FetchError && is.plainObject(err.data) && is.string(err.data.statusMessage)
-        ? err.data.statusMessage
-        : t(TranslationKey.LoginInvalidCode)
-    return
-  }
-  await navigateTo('/')
 }
 </script>
 

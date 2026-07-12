@@ -1,7 +1,7 @@
 import { Effect } from 'effect'
 import { match } from 'ts-pattern'
 import type { CreateSessionResult } from '@/shared/types'
-import { requireUserId } from '@/server/lib/auth/auth.http'
+import { requireUserId } from '@/server/lib/auth/auth.session'
 import { HttpStatus } from '@/server/lib/http/http.status'
 import { runOrThrow } from '@/server/lib/http/http.run'
 import { shuffle } from '@/server/lib/quiz/quiz.question'
@@ -17,7 +17,7 @@ import { useQuizStorage } from '@/server/lib/storage/storage.context'
  * a random shuffle) so the session stays reproducible even if the bank changes.
  */
 export default defineEventHandler(async (event): Promise<CreateSessionResult> => {
-  const userId: number = requireUserId(event)
+  const userId: number = await requireUserId(event)
   const body: unknown = await readBody(event)
   const storage = await useQuizStorage()
   return runOrThrow(

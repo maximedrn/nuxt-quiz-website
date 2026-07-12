@@ -9,7 +9,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
-  modules: ['@vueuse/nuxt'],
+  modules: ['@vueuse/nuxt', 'nuxt-auth-utils'],
 
   // Every explicit import in the project is written `@/...` from the repo root.
   // Nuxt propagates this alias into both Vite and the generated tsconfig paths.
@@ -39,14 +39,12 @@ export default defineNuxtConfig({
     databaseUrl: process.env.DATABASE_URL,
     redisUrl: process.env.REDIS_URL,
     storageDriver: process.env.STORAGE_DRIVER,
-    jwtAccessSecret: process.env.JWT_ACCESS_SECRET,
-    jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
-    accessTokenTtl: process.env.ACCESS_TOKEN_TTL,
-    refreshTokenTtl: process.env.REFRESH_TOKEN_TTL,
+    authLookupPepper: process.env.AUTH_LOOKUP_PEPPER,
     rateLimitPoints: process.env.RATE_LIMIT_POINTS,
     rateLimitDuration: process.env.RATE_LIMIT_DURATION,
     authRateLimitPoints: process.env.AUTH_RATE_LIMIT_POINTS,
     authRateLimitDuration: process.env.AUTH_RATE_LIMIT_DURATION,
+    trustedProxy: process.env.TRUSTED_PROXY,
     rpcUrl: process.env.RPC_URL,
     contractAddress: process.env.CONTRACT_ADDRESS,
     signerPrivateKey: process.env.SIGNER_PRIVATE_KEY,

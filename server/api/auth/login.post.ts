@@ -1,26 +1,26 @@
 import is from '@sindresorhus/is'
-import { useAuth } from '@/server/lib/auth/auth.context'
-import { setRefreshCookie } from '@/server/lib/auth/auth.http'
 import type { AuthResult } from '@/shared/types'
+import { useAuth } from '@/server/lib/auth/auth.context'
+import { AuthMessage } from '@/server/lib/auth/auth.message'
+import { HttpStatus } from '@/server/lib/http/http.status'
+import { runOrThrow } from '@/server/lib/http/http.run'
+
+const CODE_PATTERN = /^\d{8}$/
 
 /**
- * Signs in with an existing 8-digit code.
+ * Signs in with an existing 8-digit code and opens a session.
  *
- * Any failure (unknown or wrong code) returns a single 401 so accounts can't be
- * enumerated. Sets a fresh rotating refresh cookie on success.
+ * A wrong or unknown code returns a single 401 (constant-time) so accounts
+ * can't be enumerated; a malformed code returns 400.
  */
 export default defineEventHandler(async (event): Promise<AuthResult> => {
   const body = await readBody(event)
   const code = is.plainObject(body) && is.string(body.code) ? body.code : ''
-
-  const result = await useAuth().login(code)
-  if (result.isErr()) {
-    throw createError({ statusCode: 401, statusMessage: result.error })
+  if (!CODE_PATTERN.test(code)) {
+    throw createError({ statusCode: HttpStatus.BAD_REQUEST, statusMessage: AuthMessage.INVALID_FORMAT })
   }
 
-  setRefreshCookie(event, result.value.tokens.refreshToken)
-  return {
-    accessToken: result.value.tokens.accessToken,
-    expiresIn: result.value.tokens.accessExpiresIn,
-  }
+  const { id } = await runOrThrow(useAuth().login(code))
+  await setUserSession(event, { user: { id } })
+  return { userId: id }
 })

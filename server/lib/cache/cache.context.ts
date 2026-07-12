@@ -12,13 +12,13 @@ let _cache: ICacheService | undefined
  */
 export function useCache(): ICacheService {
   if (!_cache) {
-    const effect = createCache({ redisUrl: useEnv().config.redisUrl })
-    // ponytail: synchronous bootstrap — Effect.runSync would fail on async; factory is sync here
-    _cache = Effect.runSync(effect.pipe(
-      Effect.catchAll((e) => {
-        throw createError({ statusCode: e.status, statusMessage: e.message })
-      }),
-    ))
+    _cache = Effect.runSync(
+      createCache({ redisUrl: useEnv().config.redisUrl }).pipe(
+        Effect.catchAll((error) =>
+          Effect.die(createError({ statusCode: error.status, statusMessage: error.message })),
+        ),
+      ),
+    )
   }
   return _cache
 }

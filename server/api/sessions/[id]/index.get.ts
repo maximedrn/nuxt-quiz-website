@@ -1,6 +1,6 @@
 import { Effect } from 'effect'
 import type { SessionStateResult } from '@/shared/types'
-import { requireUserId } from '@/server/lib/auth/auth.http'
+import { requireUserId } from '@/server/lib/auth/auth.session'
 import { HttpStatus } from '@/server/lib/http/http.status'
 import { runOrThrow } from '@/server/lib/http/http.run'
 import { toPlayableQuestion } from '@/server/lib/quiz/quiz.question'
@@ -15,7 +15,7 @@ import { useQuizStorage } from '@/server/lib/storage/storage.context'
  * question (answer key stripped), and the correct/incorrect trail so far.
  */
 export default defineEventHandler(async (event): Promise<SessionStateResult> => {
-  const userId: number = requireUserId(event)
+  const userId: number = await requireUserId(event)
   const storage = await useQuizStorage()
   return runOrThrow(
     Effect.gen(function* () {
