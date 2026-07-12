@@ -1,0 +1,93 @@
+{
+  "common": {
+    "dashboard": "Dashboard",
+    "loading": "Loading…"
+  },
+  "dashboard": {
+    "answers": "{count} answers",
+    "averageScore": "Average score",
+    "bestScore": "Best score",
+    "completedSessions": "Completed sessions",
+    "currentStreak": "Current streak",
+    "description": "Multiple-choice questions. Answer, verify, and track your progress across sessions.",
+    "emptyBody": "Start your first training session to begin tracking your progress across the {count} available questions.",
+    "emptyTitle": "No session yet",
+    "errorRate": "{rate}% wrong · {attempts} attempt(s)",
+    "eyebrow": "Practice Quiz",
+    "overallAccuracy": "Overall accuracy",
+    "recentSessions": "Recent sessions",
+    "streakActive": "day(s) in a row",
+    "streakInactive": "train today",
+    "streakValue": "{count} d",
+    "title": "Training",
+    "trendLabel": "Score trend across recent sessions",
+    "viewHistory": "View history",
+    "weakest": "Questions to review"
+  },
+  "history": {
+    "answered": "{answered}/{total} answered",
+    "empty": "No session yet.",
+    "questions": "{count} questions",
+    "resume": "Resume",
+    "review": "Review",
+    "startFirst": "Start your first session"
+  },
+  "login": {
+    "codeLabel": "8-digit code",
+    "codePlaceholder": "••••••••",
+    "hint": "Pick a code you will remember — it cannot be recovered.",
+    "invalidCode": "The code must be exactly 8 digits.",
+    "register": "Create account",
+    "signIn": "Sign in",
+    "subtitle": "Enter your 8-digit code to continue.",
+    "title": "Sign in"
+  },
+  "meta": {
+    "description": "Multiple-choice quiz with progress tracking and code highlighting.",
+    "title": "Practice Quiz"
+  },
+  "mode": {
+    "random": "Random",
+    "sequential": "In order"
+  },
+  "nav": {
+    "brand": "Quiz",
+    "history": "History",
+    "logout": "Sign out",
+    "newSession": "New session"
+  },
+  "question": {
+    "correct": "Correct.",
+    "incorrect": "Incorrect."
+  },
+  "quizList": {
+    "empty": "No quizzes available yet.",
+    "start": "Start",
+    "title": "Available Quizzes"
+  },
+  "quizNew": {
+    "all": "All ({count})",
+    "error": "Could not start the session. Make sure the database is reachable.",
+    "order": "Order",
+    "questionCount": "Number of questions",
+    "start": "Start",
+    "starting": "Starting…",
+    "subtitle": "Choose the length and order of the questions."
+  },
+  "quizPlay": {
+    "errorFinish": "Could not finish the session.",
+    "errorLoad": "Could not load this session.",
+    "errorSubmit": "Could not save this answer.",
+    "finish": "Finish session",
+    "nextQuestion": "Next question",
+    "quit": "Quit session"
+  },
+  "results": {
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "sessionComplete": "Session complete"
+  },
+  "theme": {
+    "toggle": "Theme"
+  }
+}

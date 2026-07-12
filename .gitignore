@@ -11,7 +11,7 @@ npm-debug.log*
 # Env
 .env
 .env.*
-!.env.example
+!.env.template
 
 # Editor / OS
 .DS_Store

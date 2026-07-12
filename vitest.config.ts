@@ -1,20 +1,24 @@
-import { fileURLToPath } from 'node:url'
-import vue from '@vitejs/plugin-vue'
-import { defineConfig } from 'vitest/config'
+import { fileURLToPath } from "node:url";
+import vue from "@vitejs/plugin-vue";
+import { defineConfig, type ViteUserConfig } from "vitest/config";
 
-/** Repo root — mirrors the `@/` alias configured in `nuxt.config.ts`. */
-const rootDir = fileURLToPath(new URL('.', import.meta.url))
+/**
+ * Repo root — mirrors the `@/` alias configured in `nuxt.config.ts`.
+ */
+const rootDir: string = fileURLToPath(new URL(".", import.meta.url));
 
-export default defineConfig({
+const config: ViteUserConfig = defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': rootDir,
+      "@": `${rootDir}src`,
     },
   },
   test: {
-    environment: 'node',
-    include: ['**/*.test.ts'],
-    exclude: ['**/node_modules/**', '**/.nuxt/**', '**/.output/**'],
+    environment: "node",
+    exclude: ["**/node_modules/**", "**/.nuxt/**", "**/.output/**"],
+    include: ["**/*.test.ts"],
   },
-})
+});
+
+export default config;

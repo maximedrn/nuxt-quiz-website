@@ -1,92 +1,108 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import { fileURLToPath } from 'node:url'
-import tailwindcss from '@tailwindcss/vite'
 
-/** Repo root — the `@/` alias resolves from here (e.g. `@/server/lib/...`). */
-const rootDir = fileURLToPath(new URL('.', import.meta.url))
+import process from "node:process";
+import { fileURLToPath } from "node:url";
+import tailwindcss from "@tailwindcss/vite";
+import { defineNuxtConfig } from "nuxt/config";
 
-export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
+/**
+ * Repo root — the `@/` alias resolves from `src/` (e.g. `@/app/lib/...`).
+ */
+const rootDir: string = fileURLToPath(new URL(".", import.meta.url));
+
+const config: ReturnType<typeof defineNuxtConfig> = defineNuxtConfig({
+  alias: {
+    "@": `${rootDir}src`,
+  },
+  app: {
+    head: {
+      link: [
+        { href: "/favicon.svg", rel: "icon", type: "image/svg+xml" },
+        { href: "https://fonts.googleapis.com", rel: "preconnect" },
+        {
+          crossorigin: "",
+          href: "https://fonts.gstatic.com",
+          rel: "preconnect",
+        },
+        {
+          href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap",
+          rel: "stylesheet",
+        },
+      ],
+      meta: [{ content: "#0B0D12", name: "theme-color" }],
+    },
+  },
+  compatibilityDate: "2025-07-15",
+  components: [
+    {
+      extensions: ["vue"],
+      path: `${rootDir}src/app/components/ui`,
+      pathPrefix: false,
+    },
+    { ignore: ["**/ui/**"], path: `${rootDir}src/app/components` },
+  ],
+
+  css: ["@/app/assets/css/main.css"],
   devtools: { enabled: true },
 
-  modules: ['@vueuse/nuxt', 'nuxt-auth-utils', '@nuxtjs/i18n'],
-
+  dir: {
+    public: "src/public",
+  },
   i18n: {
-    defaultLocale: 'fr',
-    strategy: 'no_prefix',
-    bundle: { optimizeTranslationDirective: false },
+    defaultLocale: "fr",
     locales: [
-      { code: 'fr', file: 'fr.json' },
-      { code: 'en', file: 'en.json' },
+      { code: "fr", file: "fr.json" },
+      { code: "en", file: "en.json" },
     ],
+    restructureDir: "src/i18n",
+    strategy: "no_prefix",
+  },
+  imports: {
+    imports: [{ from: "@/app/lib/cn.ts", name: "cn" }],
   },
 
-  // Every explicit import in the project is written `@/...` from the repo root.
-  // Nuxt propagates this alias into both Vite and the generated tsconfig paths.
-  alias: {
-    '@': rootDir,
-  },
+  modules: ["@vueuse/nuxt", "nuxt-auth-utils", "@nuxtjs/i18n"],
 
   nitro: {
     alias: {
-      '@': rootDir,
+      "@": `${rootDir}src`,
     },
-    // viem (blockchain storage backend) pulls @noble/hashes, whose conditional
-    // `./crypto` export gets mangled by Nitro's production trace. Keep them
-    // external so Node resolves them from node_modules with exports intact.
-    externals: {
-      external: ['viem', '@noble/hashes', '@noble/curves'],
+    typescript: {
+      tsConfig: {
+        compilerOptions: {
+          allowImportingTsExtensions: true,
+        },
+      },
     },
   },
-
+  runtimeConfig: {
+    authLookupPepper: process.env.AUTH_LOOKUP_PEPPER,
+    authRateLimitDuration: process.env.AUTH_RATE_LIMIT_DURATION,
+    authRateLimitPoints: process.env.AUTH_RATE_LIMIT_POINTS,
+    databaseHost: process.env.DATABASE_HOST,
+    databaseName: process.env.DATABASE_NAME,
+    databasePassword: process.env.DATABASE_PASSWORD,
+    databasePort: process.env.DATABASE_PORT,
+    databaseUser: process.env.DATABASE_USER,
+    rateLimitDuration: process.env.RATE_LIMIT_DURATION,
+    rateLimitPoints: process.env.RATE_LIMIT_POINTS,
+    redisUrl: process.env.REDIS_URL,
+    trustedProxy: process.env.TRUSTED_PROXY,
+  },
+  serverDir: "src/server",
+  srcDir: "src/app",
+  typescript: {
+    strict: true,
+    tsConfig: {
+      compilerOptions: {
+        allowImportingTsExtensions: true,
+      },
+    },
+    typeCheck: false,
+  },
   vite: {
     plugins: [tailwindcss()],
   },
+});
 
-  runtimeConfig: {
-    // Server-only. Populated from env vars at runtime and validated by the
-    // `env` service (`@/server/lib/env/env.factory`).
-    databaseUrl: process.env.DATABASE_URL,
-    redisUrl: process.env.REDIS_URL,
-    storageDriver: process.env.STORAGE_DRIVER,
-    authLookupPepper: process.env.AUTH_LOOKUP_PEPPER,
-    rateLimitPoints: process.env.RATE_LIMIT_POINTS,
-    rateLimitDuration: process.env.RATE_LIMIT_DURATION,
-    authRateLimitPoints: process.env.AUTH_RATE_LIMIT_POINTS,
-    authRateLimitDuration: process.env.AUTH_RATE_LIMIT_DURATION,
-    trustedProxy: process.env.TRUSTED_PROXY,
-    rpcUrl: process.env.RPC_URL,
-    contractAddress: process.env.CONTRACT_ADDRESS,
-    signerPrivateKey: process.env.SIGNER_PRIVATE_KEY,
-  },
-
-  app: {
-    head: {
-      title: 'Core Solidity & EVM — Entraînement',
-      meta: [
-        {
-          name: 'description',
-          content:
-            "Quiz d'entraînement pour la certification Cyfrin SSCD+ : 90 questions sur Solidity et l'EVM, avec suivi de progression.",
-        },
-        { name: 'theme-color', content: '#0B0D12' },
-      ],
-      link: [
-        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
-        {
-          rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap',
-        },
-      ],
-    },
-  },
-
-  css: ['@/app/assets/css/main.css'],
-
-  typescript: {
-    strict: true,
-    typeCheck: false,
-  },
-})
+export default config;

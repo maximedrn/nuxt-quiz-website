@@ -1,0 +1,13 @@
+pre-commit:
+  commands:
+    biome:
+      glob: "**/*.{js,ts,jsx,tsx,json,jsonc,css}"
+      run: bunx biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+    prettier:
+      glob: "**/*.{js,ts,jsx,tsx}"
+      run: bunx prettier --write {staged_files}
+      stage_fixed: true
+    cspell:
+      glob: "**/*.{js,ts,jsx,tsx,json,jsonc,md,yml,yaml}"
+      run: bunx cspell --no-progress --no-must-find-files {staged_files}

@@ -1,0 +1,93 @@
+{
+  "common": {
+    "dashboard": "Tableau de bord",
+    "loading": "Chargement…"
+  },
+  "dashboard": {
+    "answers": "{count} réponses",
+    "averageScore": "Score moyen",
+    "bestScore": "Meilleur score",
+    "completedSessions": "Sessions complétées",
+    "currentStreak": "Série en cours",
+    "description": "Questions à choix multiple. Réponds, vérifie, et suis ta progression au fil de tes sessions.",
+    "emptyBody": "Lance ta première session d'entraînement pour commencer à suivre ta progression sur les {count} questions disponibles.",
+    "emptyTitle": "Aucune session pour l'instant",
+    "errorRate": "{rate}% d'erreurs · {attempts} tentative(s)",
+    "eyebrow": "Quiz d'entraînement",
+    "overallAccuracy": "Précision globale",
+    "recentSessions": "Dernières sessions",
+    "streakActive": "jour(s) d'affilée",
+    "streakInactive": "entraîne-toi aujourd'hui",
+    "streakValue": "{count} j",
+    "title": "Entraînement",
+    "trendLabel": "Évolution du score sur les dernières sessions",
+    "viewHistory": "Voir l'historique",
+    "weakest": "Questions à retravailler"
+  },
+  "history": {
+    "answered": "{answered}/{total} répondues",
+    "empty": "Aucune session pour l'instant.",
+    "questions": "{count} questions",
+    "resume": "Reprendre",
+    "review": "Revoir",
+    "startFirst": "Lance ta première session"
+  },
+  "login": {
+    "codeLabel": "Code à 8 chiffres",
+    "codePlaceholder": "••••••••",
+    "hint": "Choisis un code que tu retiendras — il ne peut pas être récupéré.",
+    "invalidCode": "Le code doit contenir exactement 8 chiffres.",
+    "register": "Créer un compte",
+    "signIn": "Se connecter",
+    "subtitle": "Entre ton code à 8 chiffres pour continuer.",
+    "title": "Connexion"
+  },
+  "meta": {
+    "description": "Quiz à choix multiple avec suivi de progression et mise en valeur du code.",
+    "title": "Quiz d'entraînement"
+  },
+  "mode": {
+    "random": "Aléatoire",
+    "sequential": "Dans l'ordre"
+  },
+  "nav": {
+    "brand": "Quiz",
+    "history": "Historique",
+    "logout": "Déconnexion",
+    "newSession": "Nouvelle session"
+  },
+  "question": {
+    "correct": "Correct.",
+    "incorrect": "Incorrect."
+  },
+  "quizList": {
+    "empty": "Aucun quiz disponible pour l'instant.",
+    "start": "Commencer",
+    "title": "Quizzes disponibles"
+  },
+  "quizNew": {
+    "all": "Toutes ({count})",
+    "error": "Impossible de démarrer la session. Vérifie que la base de données est bien accessible.",
+    "order": "Ordre",
+    "questionCount": "Nombre de questions",
+    "start": "Commencer",
+    "starting": "Démarrage…",
+    "subtitle": "Choisis la longueur et l'ordre des questions."
+  },
+  "quizPlay": {
+    "errorFinish": "Impossible de terminer la session.",
+    "errorLoad": "Impossible de charger cette session.",
+    "errorSubmit": "Impossible d'enregistrer cette réponse.",
+    "finish": "Terminer la session",
+    "nextQuestion": "Question suivante",
+    "quit": "Quitter la session"
+  },
+  "results": {
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "sessionComplete": "Session terminée"
+  },
+  "theme": {
+    "toggle": "Thème"
+  }
+}

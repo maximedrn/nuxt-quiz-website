@@ -1,36 +1,47 @@
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: solidity-quiz-db
+    container_name: postgres-quiz
     restart: unless-stopped
     environment:
-      POSTGRES_USER: quiz
-      POSTGRES_PASSWORD: quiz
-      POSTGRES_DB: solidity_quiz
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
     ports:
-      - '5432:5432'
+      - "${DATABASE_PORT:-5432}:5432"
     volumes:
-      - solidity-quiz-data:/var/lib/postgresql/data
+      - postgres-quiz-data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U quiz -d solidity_quiz']
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
       timeout: 5s
-      retries: 10
-
+      retries: 5
+      start_period: 15s
   redis:
     image: redis:7-alpine
-    container_name: solidity-quiz-redis
+    container_name: redis-quiz
     restart: unless-stopped
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--appendfsync",
+        "everysec",
+        "--requirepass",
+        "${REDIS_PASSWORD}",
+      ]
     ports:
-      - '6379:6379'
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
-      - solidity-quiz-redis:/data
+      - redis-quiz-data:/data
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "--raw", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
 
 volumes:
-  solidity-quiz-data:
-  solidity-quiz-redis:
+  postgres-quiz-data:
+  redis-quiz-data:
