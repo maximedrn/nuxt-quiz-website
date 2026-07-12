@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { cn } from '@/app/lib/cn'
 import { splitQuestion } from '@/app/lib/quiz/split-question'
 import type { AnswerLetter, PlayableQuestion } from '@/shared/types'
 
+/** Feedback for a single answered question — correct/incorrect state plus explanation. */
 export interface QuestionFeedback {
   selected: AnswerLetter
   correct: boolean
@@ -29,16 +31,18 @@ function stateFor(letter: AnswerLetter): 'default' | 'correct' | 'incorrect' | '
 </script>
 
 <template>
-  <div class="question-card card">
-    <div class="question-card__eyebrow eyebrow">Q{{ question.number }} · {{ question.title }}</div>
+  <Card class="flex flex-col gap-5 p-6">
+    <span class="font-mono text-xs font-medium uppercase tracking-wider text-ink-faint">
+      Q{{ question.number }} · {{ question.title }}
+    </span>
 
-    <div class="question-card__prose">
-      <p>{{ parts.before }}</p>
+    <div class="flex flex-col gap-2">
+      <p class="text-[1.05rem] text-ink">{{ parts.before }}</p>
       <CodeBlock v-if="question.code" :code="question.code" />
-      <p v-if="parts.after">{{ parts.after }}</p>
+      <p v-if="parts.after" class="text-[1.05rem] text-ink">{{ parts.after }}</p>
     </div>
 
-    <div class="question-card__options flex-col gap-3">
+    <div class="flex flex-col gap-3">
       <OptionButton
         v-for="letter in letters"
         :key="letter"
@@ -50,80 +54,31 @@ function stateFor(letter: AnswerLetter): 'default' | 'correct' | 'incorrect' | '
       />
     </div>
 
-    <Transition name="fade-up">
+    <Transition
+      enter-active-class="transition-[opacity,transform] duration-200 ease-out"
+      enter-from-class="opacity-0 translate-y-1"
+    >
       <div
         v-if="feedback"
-        class="question-card__feedback"
-        :class="feedback.correct ? 'is-correct' : 'is-incorrect'"
+        :class="cn(
+          'rounded-[var(--radius-md)]',
+          'p-4',
+          'border',
+          feedback.correct ? 'bg-success-soft border-success' : 'bg-danger-soft border-danger',
+        )"
       >
-        <p class="question-card__feedback-title">
+        <p
+          :class="cn(
+            'font-display',
+            'font-semibold',
+            'mb-2',
+            feedback.correct ? 'text-success' : 'text-danger',
+          )"
+        >
           {{ feedback.correct ? 'Correct.' : 'Incorrect.' }}
         </p>
-        <p class="question-card__feedback-text">{{ feedback.explanation }}</p>
+        <p class="text-[0.92rem] text-ink-muted leading-relaxed">{{ feedback.explanation }}</p>
       </div>
     </Transition>
-  </div>
+  </Card>
 </template>
-
-<style scoped>
-.question-card {
-  padding: var(--space-6);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-
-.question-card__prose {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.question-card__prose p {
-  font-size: 1.05rem;
-  color: var(--ink);
-}
-
-.question-card__feedback {
-  border-radius: var(--radius-md);
-  padding: var(--space-4);
-  border: 1px solid var(--border);
-}
-
-.question-card__feedback.is-correct {
-  background: var(--success-soft);
-  border-color: var(--success);
-}
-.question-card__feedback.is-incorrect {
-  background: var(--danger-soft);
-  border-color: var(--danger);
-}
-
-.question-card__feedback-title {
-  font-family: var(--font-display);
-  font-weight: 600;
-  margin-bottom: var(--space-2);
-}
-.is-correct .question-card__feedback-title {
-  color: var(--success);
-}
-.is-incorrect .question-card__feedback-title {
-  color: var(--danger);
-}
-
-.question-card__feedback-text {
-  font-size: 0.92rem;
-  color: var(--ink-muted);
-  line-height: 1.6;
-}
-
-.fade-up-enter-active {
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
-}
-.fade-up-enter-from {
-  opacity: 0;
-  transform: translateY(4px);
-}
-</style>

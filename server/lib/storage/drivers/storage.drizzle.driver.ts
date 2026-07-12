@@ -9,11 +9,11 @@ import type { IStorageDriver } from '@/server/lib/storage/drivers/storage.driver
 import { StorageMessage } from '@/server/lib/storage/storage.message'
 import { computeStats } from '@/server/lib/storage/storage.stats'
 import {
-  StorageError,
   type NewAnswerInput,
   type NewSessionInput,
   type QuestionRef,
   type SessionPatch,
+  StorageError,
   type StoredAnswer,
   type StoredQuestion,
   type StoredSession,
@@ -101,7 +101,9 @@ class DrizzleStorageDriver implements IStorageDriver {
         .where(eq(quizSessions.id, id))
         .limit(1)
       return row
-    }).pipe(Effect.map((row): Option.Option<StoredSession> => (row ? Option.some(row) : Option.none())))
+    }).pipe(
+      Effect.map((row): Option.Option<StoredSession> => (row ? Option.some(row) : Option.none())),
+    )
   }
 
   listSessions(userId: number): Effect.Effect<StoredSession[], StorageError> {

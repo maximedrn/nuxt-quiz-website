@@ -1,8 +1,7 @@
 import { Data, Schema } from 'effect'
 import type { ReadonlyDeep } from 'type-fest'
 import { EnvDefaults, StorageDriverKind } from '@/server/lib/env/env.constants'
-import { EnvMessage } from '@/server/lib/env/env.message'
-import { HttpStatus } from '@/server/lib/http/http.status'
+import type { HttpStatus } from '@/server/lib/http/http.status'
 
 /** Tagged error for env validation failures. */
 export class EnvError extends Data.TaggedError('EnvError')<{
@@ -33,10 +32,18 @@ export const EnvSchema = Schema.Struct({
   ),
   sessionPassword: Schema.String.pipe(Schema.minLength(32)),
   authLookupPepper: Schema.String.pipe(Schema.minLength(32)),
-  rateLimitPoints: Schema.optionalWith(Schema.NumberFromString, { default: () => EnvDefaults.RATE_LIMIT_POINTS }),
-  rateLimitDuration: Schema.optionalWith(Schema.NumberFromString, { default: () => EnvDefaults.RATE_LIMIT_DURATION }),
-  authRateLimitPoints: Schema.optionalWith(Schema.NumberFromString, { default: () => EnvDefaults.AUTH_RATE_LIMIT_POINTS }),
-  authRateLimitDuration: Schema.optionalWith(Schema.NumberFromString, { default: () => EnvDefaults.AUTH_RATE_LIMIT_DURATION }),
+  rateLimitPoints: Schema.optionalWith(Schema.NumberFromString, {
+    default: () => EnvDefaults.RATE_LIMIT_POINTS,
+  }),
+  rateLimitDuration: Schema.optionalWith(Schema.NumberFromString, {
+    default: () => EnvDefaults.RATE_LIMIT_DURATION,
+  }),
+  authRateLimitPoints: Schema.optionalWith(Schema.NumberFromString, {
+    default: () => EnvDefaults.AUTH_RATE_LIMIT_POINTS,
+  }),
+  authRateLimitDuration: Schema.optionalWith(Schema.NumberFromString, {
+    default: () => EnvDefaults.AUTH_RATE_LIMIT_DURATION,
+  }),
   /** Whether to trust the `X-Forwarded-For` header (only enable behind a real proxy). */
   trustedProxy: Schema.optionalWith(Schema.Literal('true', 'false'), { default: () => 'false' }),
   rpcUrl: OptionalString,
@@ -49,4 +56,3 @@ export type Env = Schema.Schema.Type<typeof EnvSchema>
 
 /** Immutable view of the environment exposed to consumers. */
 export type EnvConfig = ReadonlyDeep<Env>
-

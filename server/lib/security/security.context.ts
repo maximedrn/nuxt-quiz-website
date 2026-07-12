@@ -19,11 +19,13 @@ export function useSecurity(): IRateLimitService {
       auth: { points: config.authRateLimitPoints, duration: config.authRateLimitDuration },
     })
     // ponytail: synchronous Effect.runSync is safe here — createSecurity only returns succeed/fail
-    const result = Effect.runSync(effect.pipe(
-      Effect.mapError((e) => {
-        throw createError({ statusCode: 500, statusMessage: e.message })
-      }),
-    ))
+    const result = Effect.runSync(
+      effect.pipe(
+        Effect.mapError((e) => {
+          throw createError({ statusCode: 500, statusMessage: e.message })
+        }),
+      ),
+    )
     _security = result
   }
   return _security

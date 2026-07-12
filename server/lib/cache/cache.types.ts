@@ -1,6 +1,6 @@
-import { Data } from 'effect'
 import type { Effect, Option } from 'effect'
-import { HttpStatus } from '@/server/lib/http/http.status'
+import { Data } from 'effect'
+import type { HttpStatus } from '@/server/lib/http/http.status'
 
 /** Tagged error for cache domain failures. */
 export class CacheError extends Data.TaggedError('CacheError')<{
@@ -31,7 +31,11 @@ export interface CacheOperations {
    *
    * @returns {Effect.Effect<A, CacheError>} The cached or freshly-computed value.
    */
-  getOrSet<A>(key: string, ttlSeconds: number, factory: () => Effect.Effect<A, CacheError>): Effect.Effect<A, CacheError>
+  getOrSet<A>(
+    key: string,
+    ttlSeconds: number,
+    factory: () => Effect.Effect<A, CacheError>,
+  ): Effect.Effect<A, CacheError>
 
   /**
    * Stores a value with a TTL.

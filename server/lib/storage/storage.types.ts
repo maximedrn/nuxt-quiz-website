@@ -1,7 +1,7 @@
-import { Data } from 'effect'
 import type { Effect, Option } from 'effect'
+import { Data } from 'effect'
 import type { RequireAtLeastOne } from 'type-fest'
-import { HttpStatus } from '@/server/lib/http/http.status'
+import type { HttpStatus } from '@/server/lib/http/http.status'
 import type { AnswerLetter, SessionMode, SessionStatus, StatsResult } from '@/shared/types'
 
 /** Tagged error for storage domain failures. */

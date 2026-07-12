@@ -1,7 +1,7 @@
 import { Data, Effect } from 'effect'
 import { describe, expect, it, vi } from 'vitest'
-import { HttpStatus } from '@/server/lib/http/http.status'
 import { runOrThrow } from '@/server/lib/http/http.run'
+import { HttpStatus } from '@/server/lib/http/http.status'
 
 class SampleError extends Data.TaggedError('SampleError')<{
   readonly message: string
@@ -25,6 +25,9 @@ describe('runOrThrow', () => {
   /** A failing tagged error becomes an H3 error carrying its status + message. */
   it('Throws an H3 error with the tagged error status.', async () => {
     const effect = Effect.fail(new SampleError({ message: 'nope', status: HttpStatus.NOT_FOUND }))
-    await expect(runOrThrow(effect)).rejects.toMatchObject({ statusCode: 404, statusMessage: 'nope' })
+    await expect(runOrThrow(effect)).rejects.toMatchObject({
+      statusCode: 404,
+      statusMessage: 'nope',
+    })
   })
 })

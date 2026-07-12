@@ -1,12 +1,12 @@
-import { Effect } from 'effect'
 import { drizzle } from 'drizzle-orm/postgres-js'
+import { Effect } from 'effect'
 import postgres from 'postgres'
 import { DatabasePool } from '@/server/lib/database/database.constants'
 import { DatabaseMessage } from '@/server/lib/database/database.message'
 import { databaseSchema } from '@/server/lib/database/database.schema'
-import { DatabaseError, type Database } from '@/server/lib/database/database.types'
-import { HttpStatus } from '@/server/lib/http/http.status'
+import { type Database, DatabaseError } from '@/server/lib/database/database.types'
 import type { IDatabaseDriver } from '@/server/lib/database/drivers/database.driver.interface'
+import { HttpStatus } from '@/server/lib/http/http.status'
 
 /**
  * Drizzle-over-postgres.js database driver. Owns a single connection pool for

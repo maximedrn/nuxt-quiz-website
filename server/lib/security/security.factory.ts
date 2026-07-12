@@ -2,13 +2,13 @@ import is from '@sindresorhus/is'
 import { Effect } from 'effect'
 import { Redis } from 'ioredis'
 import { RateLimiterRedis } from 'rate-limiter-flexible'
+import { HttpStatus } from '@/server/lib/http/http.status'
 import { FlexibleRateLimitDriver } from '@/server/lib/security/drivers/security.flexible.driver'
 import { RateLimitPrefix } from '@/server/lib/security/security.constants'
-import { SecurityMessage } from '@/server/lib/security/security.message'
 import type { IRateLimitService } from '@/server/lib/security/security.interface'
+import { SecurityMessage } from '@/server/lib/security/security.message'
 import { RateLimitService } from '@/server/lib/security/security.service'
-import { SecurityError, type SecurityConfig } from '@/server/lib/security/security.types'
-import { HttpStatus } from '@/server/lib/http/http.status'
+import { type SecurityConfig, SecurityError } from '@/server/lib/security/security.types'
 
 /**
  * Builds the rate-limit service backed by Redis.
@@ -28,7 +28,12 @@ import { HttpStatus } from '@/server/lib/http/http.status'
  */
 function createSecurity(config: SecurityConfig): Effect.Effect<IRateLimitService, SecurityError> {
   if (!is.nonEmptyString(config.redisUrl)) {
-    return Effect.fail(new SecurityError({ message: SecurityMessage.REDIS_URL_MISSING, status: HttpStatus.INTERNAL }))
+    return Effect.fail(
+      new SecurityError({
+        message: SecurityMessage.REDIS_URL_MISSING,
+        status: HttpStatus.INTERNAL,
+      }),
+    )
   }
   const storeClient = new Redis(config.redisUrl, { maxRetriesPerRequest: 2 })
   const driver = new FlexibleRateLimitDriver({

@@ -46,8 +46,12 @@
         "noUnusedVariables": "error",
         "noUnusedImports": "error"
       },
+      "complexity": {
+        "noUselessConstructor": "off"
+      },
       "suspicious": {
-        "noExplicitAny": "warn"
+        "noExplicitAny": "warn",
+        "noConstEnum": "off"
       }
     }
   },
@@ -82,7 +86,7 @@
       }
     },
     {
-      "includes": ["**/app/pages/**/*.vue"],
+      "includes": ["**/app/pages/**/*.vue", "**/app/components/ui/**/*.vue"],
       "linter": {
         "rules": {
           "style": {

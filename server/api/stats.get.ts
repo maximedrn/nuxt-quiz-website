@@ -1,9 +1,9 @@
 import { Effect } from 'effect'
-import type { StatsResult } from '@/shared/types'
 import { requireUserId } from '@/server/lib/auth/auth.session'
 import { runOrThrow } from '@/server/lib/http/http.run'
 import { cachedStats } from '@/server/lib/storage/storage.cache'
 import { useQuizStorage } from '@/server/lib/storage/storage.context'
+import type { StatsResult } from '@/shared/types'
 
 /**
  * Returns the authenticated user's aggregate stats (accuracy, streak, score

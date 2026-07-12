@@ -1,11 +1,11 @@
 import is from '@sindresorhus/is'
 import { Effect } from 'effect'
-import { DatabaseMessage } from '@/server/lib/database/database.message'
 import type { IDatabaseService } from '@/server/lib/database/database.interface'
+import { DatabaseMessage } from '@/server/lib/database/database.message'
 import { DatabaseService } from '@/server/lib/database/database.service'
-import { DatabaseError, type DatabaseConfig } from '@/server/lib/database/database.types'
-import { HttpStatus } from '@/server/lib/http/http.status'
+import { type DatabaseConfig, DatabaseError } from '@/server/lib/database/database.types'
 import { DrizzleDatabaseDriver } from '@/server/lib/database/drivers/database.drizzle.driver'
+import { HttpStatus } from '@/server/lib/http/http.status'
 
 /**
  * Builds the database service (single shared connection pool).
@@ -26,7 +26,9 @@ import { DrizzleDatabaseDriver } from '@/server/lib/database/drivers/database.dr
  * )
  * ```
  */
-export function createDatabase(config: DatabaseConfig): Effect.Effect<IDatabaseService, DatabaseError> {
+export function createDatabase(
+  config: DatabaseConfig,
+): Effect.Effect<IDatabaseService, DatabaseError> {
   if (!is.nonEmptyString(config.url)) {
     return Effect.fail(
       new DatabaseError({

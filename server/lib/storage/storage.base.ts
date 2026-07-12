@@ -6,11 +6,11 @@ import type {
   NewSessionInput,
   QuestionRef,
   SessionPatch,
+  StorageError,
   StoredAnswer,
   StoredQuestion,
   StoredSession,
 } from '@/server/lib/storage/storage.types'
-import { StorageError } from '@/server/lib/storage/storage.types'
 import type { StatsResult } from '@/shared/types'
 
 /**

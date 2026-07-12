@@ -1,14 +1,14 @@
 import { Effect } from 'effect'
-import type { SubmitAnswerResult } from '@/shared/types'
 import { requireUserId } from '@/server/lib/auth/auth.session'
-import { HttpStatus } from '@/server/lib/http/http.status'
 import { runOrThrow } from '@/server/lib/http/http.run'
+import { HttpStatus } from '@/server/lib/http/http.status'
+import { QuizMessage } from '@/server/lib/quiz/quiz.message'
 import { getOwnedSession } from '@/server/lib/quiz/quiz.session'
 import { QuizError } from '@/server/lib/quiz/quiz.types'
-import { QuizMessage } from '@/server/lib/quiz/quiz.message'
 import { decodeOr400, parseSessionId, submitAnswerSchema } from '@/server/lib/quiz/quiz.validation'
 import { invalidateStatsCache } from '@/server/lib/storage/storage.cache'
 import { useQuizStorage } from '@/server/lib/storage/storage.context'
+import type { SubmitAnswerResult } from '@/shared/types'
 
 /**
  * Records the answer to the session's current question.
@@ -43,7 +43,10 @@ export default defineEventHandler(async (event): Promise<SubmitAnswerResult> => 
       const expectedQuestionId = session.questionIds[existingAnswers.length]
       if (input.questionId !== expectedQuestionId)
         return yield* Effect.fail(
-          new QuizError({ message: QuizMessage.QUESTION_NOT_IN_SESSION, status: HttpStatus.CONFLICT }),
+          new QuizError({
+            message: QuizMessage.QUESTION_NOT_IN_SESSION,
+            status: HttpStatus.CONFLICT,
+          }),
         )
 
       if (existingAnswers.some((a) => a.questionId === input.questionId))
@@ -55,7 +58,10 @@ export default defineEventHandler(async (event): Promise<SubmitAnswerResult> => 
       const question = questionRows[0]
       if (!question)
         return yield* Effect.fail(
-          new QuizError({ message: `${QuizMessage.SESSION_NOT_FOUND}: ${input.questionId}`, status: HttpStatus.NOT_FOUND }),
+          new QuizError({
+            message: `${QuizMessage.SESSION_NOT_FOUND}: ${input.questionId}`,
+            status: HttpStatus.NOT_FOUND,
+          }),
         )
 
       const isCorrect = input.selected === question.correctAnswer

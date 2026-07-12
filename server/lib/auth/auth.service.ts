@@ -1,13 +1,13 @@
 import { createHmac } from 'node:crypto'
-import { Effect } from 'effect'
 import { eq } from 'drizzle-orm'
+import { Effect } from 'effect'
 import { AuthRules } from '@/server/lib/auth/auth.constants'
-import { AuthMessage } from '@/server/lib/auth/auth.message'
 import type { IAuthService } from '@/server/lib/auth/auth.interface'
-import { AuthError, type AuthConfig, type AuthDependencies } from '@/server/lib/auth/auth.types'
+import { AuthMessage } from '@/server/lib/auth/auth.message'
+import { type AuthConfig, type AuthDependencies, AuthError } from '@/server/lib/auth/auth.types'
 import type { Database } from '@/server/lib/database/database.types'
-import { HttpStatus } from '@/server/lib/http/http.status'
 import { users } from '@/server/lib/database/schema/user.schema'
+import { HttpStatus } from '@/server/lib/http/http.status'
 
 /**
  * Pure, testable HMAC lookup computation.
@@ -76,8 +76,7 @@ class AuthService implements IAuthService {
       // Hash first — constant-time regardless of whether the code is taken.
       const codeHash = yield* Effect.tryPromise({
         try: () => hashPassword(code),
-        catch: (err) =>
-          new AuthError({ message: String(err), status: HttpStatus.INTERNAL }),
+        catch: (err) => new AuthError({ message: String(err), status: HttpStatus.INTERNAL }),
       })
 
       const codeLookup = this.lookup(code)
@@ -89,8 +88,7 @@ class AuthService implements IAuthService {
             .from(users)
             .where(eq(users.codeLookup, codeLookup))
             .limit(1),
-        catch: (err) =>
-          new AuthError({ message: String(err), status: HttpStatus.INTERNAL }),
+        catch: (err) => new AuthError({ message: String(err), status: HttpStatus.INTERNAL }),
       })
 
       if (existing[0]) {
@@ -101,12 +99,8 @@ class AuthService implements IAuthService {
 
       const inserted = yield* Effect.tryPromise({
         try: () =>
-          this.#db
-            .insert(users)
-            .values({ codeLookup, codeHash })
-            .returning({ id: users.id }),
-        catch: (err) =>
-          new AuthError({ message: String(err), status: HttpStatus.INTERNAL }),
+          this.#db.insert(users).values({ codeLookup, codeHash }).returning({ id: users.id }),
+        catch: (err) => new AuthError({ message: String(err), status: HttpStatus.INTERNAL }),
       })
 
       const row = inserted[0]
@@ -146,8 +140,7 @@ class AuthService implements IAuthService {
             .from(users)
             .where(eq(users.codeLookup, codeLookup))
             .limit(1),
-        catch: (err) =>
-          new AuthError({ message: String(err), status: HttpStatus.INTERNAL }),
+        catch: (err) => new AuthError({ message: String(err), status: HttpStatus.INTERNAL }),
       })
 
       const user = rows[0]
@@ -168,8 +161,7 @@ class AuthService implements IAuthService {
 
       const valid = yield* Effect.tryPromise({
         try: () => verifyPassword(user.codeHash, code),
-        catch: (err) =>
-          new AuthError({ message: String(err), status: HttpStatus.INTERNAL }),
+        catch: (err) => new AuthError({ message: String(err), status: HttpStatus.INTERNAL }),
       })
 
       if (!valid) {

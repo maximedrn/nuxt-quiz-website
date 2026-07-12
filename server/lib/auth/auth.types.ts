@@ -1,7 +1,7 @@
-import { Data } from 'effect'
 import type { Effect } from 'effect'
+import { Data } from 'effect'
 import type { Database } from '@/server/lib/database/database.types'
-import { HttpStatus } from '@/server/lib/http/http.status'
+import type { HttpStatus } from '@/server/lib/http/http.status'
 
 /** Tagged error for auth domain failures. */
 export class AuthError extends Data.TaggedError('AuthError')<{

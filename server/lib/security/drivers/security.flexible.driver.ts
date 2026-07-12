@@ -1,11 +1,15 @@
 import { Effect } from 'effect'
 import { type RateLimiterAbstract, RateLimiterRes } from 'rate-limiter-flexible'
 import { match } from 'ts-pattern'
+import { HttpStatus } from '@/server/lib/http/http.status'
 import type { IRateLimitDriver } from '@/server/lib/security/drivers/security.driver.interface'
 import { RateLimitKind } from '@/server/lib/security/security.constants'
 import { SecurityMessage } from '@/server/lib/security/security.message'
-import { HttpStatus } from '@/server/lib/http/http.status'
-import { SecurityError, type RateLimitKindValue, type RateLimitResult } from '@/server/lib/security/security.types'
+import {
+  type RateLimitKindValue,
+  type RateLimitResult,
+  SecurityError,
+} from '@/server/lib/security/security.types'
 
 /** The two limiters this driver charges against. */
 interface Limiters {

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { QuestionFeedback } from '@/app/components/QuestionCard.vue'
+import { Button } from '@/app/components/ui/button'
+import { Card, CardContent } from '@/app/components/ui/card'
 import type { AnswerLetter, PlayableQuestion, SessionProgress } from '@/shared/types'
 
 const route = useRoute()
@@ -106,79 +108,41 @@ async function next() {
 </script>
 
 <template>
-  <div class="page">
+  <div class="flex min-h-screen flex-col">
     <AppHeader compact />
 
-    <main class="container quiz-play">
-      <div class="quiz-play__top flex-col gap-3">
+    <main class="mx-auto w-full max-w-[780px] px-6 pb-16 pt-6 flex flex-col gap-5">
+      <div class="flex flex-col gap-3">
         <div class="flex items-center justify-between">
-          <NuxtLink to="/" class="back-link">Quitter la session</NuxtLink>
-          <span v-if="progress.total > 0" class="quiz-play__counter eyebrow">
+          <NuxtLink to="/" class="text-[0.85rem] text-ink-muted no-underline hover:text-ink">Quitter la session</NuxtLink>
+          <span v-if="progress.total > 0" class="flex-none font-mono text-xs font-medium uppercase tracking-wider text-ink-faint">
             {{ progress.current }} / {{ progress.total }}
           </span>
         </div>
         <ProgressChain v-if="progress.total > 0" :results="chainResults" :current-index="progress.current - 1" />
       </div>
 
-      <p v-if="errorMessage" class="quiz-play__error">{{ errorMessage }}</p>
+      <p v-if="errorMessage" class="text-[0.9rem] text-danger">{{ errorMessage }}</p>
 
-      <div v-if="isLoading && !question" class="card quiz-play__loading">
-        <p>Chargement…</p>
-      </div>
+      <Card v-if="isLoading && !question">
+        <CardContent class="p-6 text-center text-ink-muted">
+          <p>Chargement…</p>
+        </CardContent>
+      </Card>
 
       <template v-else-if="question">
         <QuestionCard :question="question" :feedback="feedback" @pick="handlePick" />
 
-        <div class="quiz-play__actions flex justify-end">
-          <button
+        <div class="flex min-h-[2.75rem] justify-end">
+          <Button
             v-if="feedback"
-            type="button"
-            class="btn btn-accent"
             :disabled="isLoading"
             @click="next"
           >
             {{ isLastQuestion ? 'Terminer la session' : 'Question suivante' }}
-          </button>
+          </Button>
         </div>
       </template>
     </main>
   </div>
 </template>
-
-<style scoped>
-.quiz-play {
-  padding-top: var(--space-5);
-  padding-bottom: var(--space-8);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-
-.back-link {
-  font-size: 0.85rem;
-  color: var(--ink-muted);
-  text-decoration: none;
-}
-.back-link:hover {
-  color: var(--ink);
-}
-
-.quiz-play__counter {
-  flex: none;
-}
-
-.quiz-play__loading {
-  padding: var(--space-6);
-  text-align: center;
-  color: var(--ink-muted);
-}
-
-.quiz-play__error {
-  color: var(--danger);
-  font-size: 0.9rem;
-}
-
-.quiz-play__actions {
-  min-height: 2.75rem;
-}
-</style>

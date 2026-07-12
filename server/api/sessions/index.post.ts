@@ -1,14 +1,14 @@
 import { Effect } from 'effect'
 import { match } from 'ts-pattern'
-import type { CreateSessionResult } from '@/shared/types'
 import { requireUserId } from '@/server/lib/auth/auth.session'
-import { HttpStatus } from '@/server/lib/http/http.status'
 import { runOrThrow } from '@/server/lib/http/http.run'
-import { shuffle } from '@/server/lib/quiz/quiz.question'
-import { createSessionSchema, decodeOr400 } from '@/server/lib/quiz/quiz.validation'
-import { QuizError } from '@/server/lib/quiz/quiz.types'
+import { HttpStatus } from '@/server/lib/http/http.status'
 import { QuizMessage } from '@/server/lib/quiz/quiz.message'
+import { shuffle } from '@/server/lib/quiz/quiz.question'
+import { QuizError } from '@/server/lib/quiz/quiz.types'
+import { createSessionSchema, decodeOr400 } from '@/server/lib/quiz/quiz.validation'
 import { useQuizStorage } from '@/server/lib/storage/storage.context'
+import type { CreateSessionResult } from '@/shared/types'
 
 /**
  * Creates a new training session for the authenticated user.
@@ -25,9 +25,16 @@ export default defineEventHandler(async (event): Promise<CreateSessionResult> =>
       const input = yield* decodeOr400(createSessionSchema, body)
       const refs = yield* storage.listQuestionRefs()
       if (refs.length === 0)
-        return yield* Effect.fail(new QuizError({ message: QuizMessage.NO_QUESTIONS, status: HttpStatus.INTERNAL }))
+        return yield* Effect.fail(
+          new QuizError({ message: QuizMessage.NO_QUESTIONS, status: HttpStatus.INTERNAL }),
+        )
       if (input.size > refs.length)
-        return yield* Effect.fail(new QuizError({ message: `${QuizMessage.SIZE_RANGE}: 1..${refs.length}`, status: HttpStatus.BAD_REQUEST }))
+        return yield* Effect.fail(
+          new QuizError({
+            message: `${QuizMessage.SIZE_RANGE}: 1..${refs.length}`,
+            status: HttpStatus.BAD_REQUEST,
+          }),
+        )
       const ordered = match(input.mode)
         .with('sequential', () => [...refs].sort((a, b) => a.number - b.number))
         .with('random', () => shuffle(refs))

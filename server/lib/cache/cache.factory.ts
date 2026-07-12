@@ -1,9 +1,9 @@
 import is from '@sindresorhus/is'
 import { Effect } from 'effect'
-import { CacheMessage } from '@/server/lib/cache/cache.message'
 import type { ICacheService } from '@/server/lib/cache/cache.interface'
-import { CacheError, type CacheConfig } from '@/server/lib/cache/cache.types'
+import { CacheMessage } from '@/server/lib/cache/cache.message'
 import { CacheService } from '@/server/lib/cache/cache.service'
+import { type CacheConfig, CacheError } from '@/server/lib/cache/cache.types'
 import { BentoCacheDriver } from '@/server/lib/cache/drivers/cache.bentocache.driver'
 import { HttpStatus } from '@/server/lib/http/http.status'
 
@@ -25,7 +25,9 @@ import { HttpStatus } from '@/server/lib/http/http.status'
  */
 function createCache(config: CacheConfig): Effect.Effect<ICacheService, CacheError> {
   if (!is.nonEmptyString(config.redisUrl)) {
-    return Effect.fail(new CacheError({ message: CacheMessage.REDIS_URL_MISSING, status: HttpStatus.INTERNAL }))
+    return Effect.fail(
+      new CacheError({ message: CacheMessage.REDIS_URL_MISSING, status: HttpStatus.INTERNAL }),
+    )
   }
   return Effect.succeed(new CacheService(new BentoCacheDriver(config)))
 }

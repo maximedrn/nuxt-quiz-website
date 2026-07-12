@@ -1,5 +1,5 @@
-import type { MeResult } from '@/shared/types'
 import { requireUserId } from '@/server/lib/auth/auth.session'
+import type { MeResult } from '@/shared/types'
 
 /**
  * Returns the authenticated user's id (throws 401 if no valid session). The

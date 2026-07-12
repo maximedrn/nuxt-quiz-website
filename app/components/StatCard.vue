@@ -7,32 +7,9 @@ defineProps<{
 </script>
 
 <template>
-  <div class="stat-card card">
-    <p class="stat-card__label eyebrow">{{ label }}</p>
-    <p class="stat-card__value">{{ value }}</p>
-    <p v-if="hint" class="stat-card__hint">{{ hint }}</p>
-  </div>
+  <Card class="flex flex-col gap-2 p-5 flex-1 basis-40 min-w-40">
+    <p class="font-mono text-xs font-medium uppercase tracking-wider text-ink-faint">{{ label }}</p>
+    <p class="font-display text-[2rem] font-semibold tracking-tight">{{ value }}</p>
+    <p v-if="hint" class="text-[0.82rem] text-ink-muted">{{ hint }}</p>
+  </Card>
 </template>
-
-<style scoped>
-.stat-card {
-  padding: var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  flex: 1 1 160px;
-  min-width: 160px;
-}
-
-.stat-card__value {
-  font-family: var(--font-display);
-  font-size: 2rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.stat-card__hint {
-  font-size: 0.82rem;
-  color: var(--ink-muted);
-}
-</style>

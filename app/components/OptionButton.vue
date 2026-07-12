@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { cn } from '@/app/lib/cn'
 import type { AnswerLetter } from '@/shared/types'
 
-defineProps<{
+const props = defineProps<{
   letter: AnswerLetter
   text: string
   state: 'default' | 'correct' | 'incorrect' | 'muted'
@@ -14,99 +15,59 @@ defineEmits<{ pick: [] }>()
 <template>
   <button
     type="button"
-    class="option"
-    :class="`option--${state}`"
     :disabled="disabled"
+    :class="cn(
+      'flex',
+      'items-start',
+      'gap-3',
+      'w-full',
+      'text-left',
+      'px-4',
+      'py-3',
+      'border',
+      'rounded-[var(--radius-md)]',
+      'bg-surface',
+      'cursor-pointer',
+      'transition-all',
+      'duration-[120ms]',
+      'ease-in-out',
+      'disabled:cursor-default',
+      props.state === 'default' && 'border-border-strong hover:border-accent hover:bg-accent-soft',
+      props.state === 'correct' && 'border-success bg-success-soft',
+      props.state === 'incorrect' && 'border-danger bg-danger-soft',
+      props.state === 'muted' && 'border-border-strong opacity-50',
+    )"
     @click="$emit('pick')"
   >
-    <span class="option__letter">{{ letter }}</span>
-    <span class="option__text">{{ text }}</span>
-    <span v-if="state === 'correct'" class="option__mark" aria-hidden="true">&check;</span>
-    <span v-else-if="state === 'incorrect'" class="option__mark" aria-hidden="true">&cross;</span>
+    <span
+      :class="cn(
+        'font-mono',
+        'text-[0.8rem]',
+        'font-semibold',
+        'border',
+        'rounded-full',
+        'w-[1.6rem]',
+        'h-[1.6rem]',
+        'flex-none',
+        'flex',
+        'items-center',
+        'justify-center',
+        'mt-[0.05rem]',
+        props.state === 'correct' ? 'border-success text-success' : '',
+        props.state === 'incorrect' ? 'border-danger text-danger' : '',
+        props.state !== 'correct' && props.state !== 'incorrect' ? 'border-border-strong text-ink-muted' : '',
+      )"
+    >{{ letter }}</span>
+    <span class="flex-1 text-[0.95rem] pt-[0.1rem]">{{ text }}</span>
+    <span
+      v-if="state === 'correct'"
+      class="flex-none text-base font-bold pt-[0.1rem] text-success"
+      aria-hidden="true"
+    >&check;</span>
+    <span
+      v-else-if="state === 'incorrect'"
+      class="flex-none text-base font-bold pt-[0.1rem] text-danger"
+      aria-hidden="true"
+    >&cross;</span>
   </button>
 </template>
-
-<style scoped>
-.option {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  width: 100%;
-  text-align: left;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  background: var(--bg-raised);
-  cursor: pointer;
-  transition:
-    border-color 0.12s ease,
-    background 0.12s ease,
-    opacity 0.12s ease;
-}
-
-.option:hover:not(:disabled) {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-
-.option:disabled {
-  cursor: default;
-}
-
-.option__letter {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--ink-muted);
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  width: 1.6rem;
-  height: 1.6rem;
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 0.05rem;
-}
-
-.option__text {
-  flex: 1;
-  font-size: 0.95rem;
-  padding-top: 0.1rem;
-}
-
-.option__mark {
-  flex: none;
-  font-size: 1rem;
-  font-weight: 700;
-  padding-top: 0.1rem;
-}
-
-.option--correct {
-  border-color: var(--success);
-  background: var(--success-soft);
-}
-.option--correct .option__letter {
-  border-color: var(--success);
-  color: var(--success);
-}
-.option--correct .option__mark {
-  color: var(--success);
-}
-
-.option--incorrect {
-  border-color: var(--danger);
-  background: var(--danger-soft);
-}
-.option--incorrect .option__letter {
-  border-color: var(--danger);
-  color: var(--danger);
-}
-.option--incorrect .option__mark {
-  color: var(--danger);
-}
-
-.option--muted {
-  opacity: 0.5;
-}
-</style>

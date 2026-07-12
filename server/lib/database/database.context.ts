@@ -18,7 +18,9 @@ export function useDatabase(): IDatabaseService {
   if (!_database) {
     _database = Effect.runSync(
       createDatabase({ url: useEnv().config.databaseUrl }).pipe(
-        Effect.catchAll((error) => Effect.die(createError({ statusCode: error.status, statusMessage: error.message }))),
+        Effect.catchAll((error) =>
+          Effect.die(createError({ statusCode: error.status, statusMessage: error.message })),
+        ),
       ),
     )
   }

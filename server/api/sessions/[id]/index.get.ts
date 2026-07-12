@@ -1,14 +1,13 @@
 import { Effect } from 'effect'
-import type { SessionStateResult } from '@/shared/types'
 import { requireUserId } from '@/server/lib/auth/auth.session'
-import { HttpStatus } from '@/server/lib/http/http.status'
 import { runOrThrow } from '@/server/lib/http/http.run'
+import { HttpStatus } from '@/server/lib/http/http.status'
 import { toPlayableQuestion } from '@/server/lib/quiz/quiz.question'
 import { getOwnedSession, toSessionSummary } from '@/server/lib/quiz/quiz.session'
 import { QuizError } from '@/server/lib/quiz/quiz.types'
-import { QuizMessage } from '@/server/lib/quiz/quiz.message'
 import { parseSessionId } from '@/server/lib/quiz/quiz.validation'
 import { useQuizStorage } from '@/server/lib/storage/storage.context'
+import type { SessionStateResult } from '@/shared/types'
 
 /**
  * Returns the live state of a session: summary, progress, the next unanswered
@@ -55,7 +54,10 @@ export default defineEventHandler(async (event): Promise<SessionStateResult> => 
       const nextQuestionId = session.questionIds[answeredCount]
       if (nextQuestionId === undefined)
         return yield* Effect.fail(
-          new QuizError({ message: 'Session question order is corrupted.', status: HttpStatus.INTERNAL }),
+          new QuizError({
+            message: 'Session question order is corrupted.',
+            status: HttpStatus.INTERNAL,
+          }),
         )
 
       const questionRows = yield* storage.getQuestionsByIds([nextQuestionId])

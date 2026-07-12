@@ -17,7 +17,11 @@ abstract class BaseCacheService implements ICacheService {
     this.driver = driver
   }
 
-  getOrSet<A>(key: string, ttlSeconds: number, factory: () => Effect.Effect<A, CacheError>): Effect.Effect<A, CacheError> {
+  getOrSet<A>(
+    key: string,
+    ttlSeconds: number,
+    factory: () => Effect.Effect<A, CacheError>,
+  ): Effect.Effect<A, CacheError> {
     return this.driver.getOrSet(key, ttlSeconds, factory)
   }
 

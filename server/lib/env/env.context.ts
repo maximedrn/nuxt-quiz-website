@@ -17,7 +17,9 @@ export function useEnv(): IEnvService {
   if (!_env) {
     _env = Effect.runSync(
       createEnv(useRuntimeConfig()).pipe(
-        Effect.catchAll((error) => Effect.die(createError({ statusCode: error.status, statusMessage: error.message }))),
+        Effect.catchAll((error) =>
+          Effect.die(createError({ statusCode: error.status, statusMessage: error.message })),
+        ),
       ),
     )
   }

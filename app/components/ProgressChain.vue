@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { cn } from '@/app/lib/cn'
+
 /**
  * A row of segments, one per question in the session — read left to right
  * like block confirmations. Filled green/red once answered, outlined while
@@ -9,54 +11,23 @@ const props = defineProps<{
   currentIndex: number
 }>()
 
-const segmentClass = (index: number) => {
-  const result = props.results[index]
-  if (result === 'correct') return 'is-correct'
-  if (result === 'incorrect') return 'is-incorrect'
-  if (index === props.currentIndex) return 'is-current'
-  return 'is-pending'
+/** Utility classes for one segment based on its answered/pending/current state. */
+const segmentClass = (index: number): string => {
+  const base: string = cn('flex-1', 'h-1.5', 'rounded-[3px]', 'border', 'transition-colors')
+  const result: 'correct' | 'incorrect' | null | undefined = props.results[index]
+  if (result === 'correct') return cn(base, 'border-success', 'bg-success')
+  if (result === 'incorrect') return cn(base, 'border-danger', 'bg-danger')
+  if (index === props.currentIndex) return cn(base, 'border-accent', 'bg-accent-soft')
+  return cn(base, 'border-border-strong', 'bg-transparent')
 }
 </script>
 
 <template>
-  <div class="chain" role="img" :aria-label="`Progression : ${currentIndex + 1} sur ${results.length}`">
-    <span
-      v-for="(_, index) in results"
-      :key="index"
-      class="chain__segment"
-      :class="segmentClass(index)"
-    />
+  <div
+    class="flex w-full gap-[3px]"
+    role="img"
+    :aria-label="`Progression : ${currentIndex + 1} sur ${results.length}`"
+  >
+    <span v-for="(_, index) in results" :key="index" :class="segmentClass(index)" />
   </div>
 </template>
-
-<style scoped>
-.chain {
-  display: flex;
-  gap: 3px;
-  width: 100%;
-}
-
-.chain__segment {
-  flex: 1;
-  height: 6px;
-  border-radius: 3px;
-  background: transparent;
-  border: 1px solid var(--border-strong);
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.chain__segment.is-current {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-
-.chain__segment.is-correct {
-  border-color: var(--success);
-  background: var(--success);
-}
-
-.chain__segment.is-incorrect {
-  border-color: var(--danger);
-  background: var(--danger);
-}
-</style>

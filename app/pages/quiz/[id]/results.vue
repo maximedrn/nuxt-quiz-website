@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { Button } from '@/app/components/ui/button'
+import { Card, CardContent } from '@/app/components/ui/card'
+import { cn } from '@/app/lib/cn'
 import { splitQuestion } from '@/app/lib/quiz/split-question'
 import type { AnswerLetter, ReviewItem } from '@/shared/types'
 
@@ -32,147 +35,69 @@ function optionClass(item: ReviewItem, letter: AnswerLetter) {
 </script>
 
 <template>
-  <div class="page">
+  <div class="flex min-h-screen flex-col">
     <AppHeader compact />
 
-    <main v-if="results" class="container quiz-results">
-      <section class="score-banner card flex-col gap-2">
-        <p class="eyebrow">Session terminée</p>
-        <h1>{{ results.session.score }}/{{ results.session.total }} · {{ percentage }}%</h1>
-        <div class="score-banner__actions flex gap-3">
-          <NuxtLink to="/quiz/new" class="btn btn-accent">Nouvelle session</NuxtLink>
-          <NuxtLink to="/" class="btn btn-ghost">Tableau de bord</NuxtLink>
-        </div>
-      </section>
+    <main v-if="results" class="mx-auto w-full max-w-[780px] px-6 pb-16 pt-8 flex flex-col gap-6">
+      <Card>
+        <CardContent class="flex flex-col gap-2 p-6">
+          <p class="font-mono text-xs font-medium uppercase tracking-wider text-ink-faint">Session terminée</p>
+          <h1 class="text-[2.25rem]">{{ results.session.score }}/{{ results.session.total }} · {{ percentage }}%</h1>
+          <div class="mt-2 flex gap-3">
+            <Button as-child>
+              <NuxtLink to="/quiz/new">Nouvelle session</NuxtLink>
+            </Button>
+            <Button variant="outline" as-child>
+              <NuxtLink to="/">Tableau de bord</NuxtLink>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-      <section class="review flex-col gap-4">
+      <section class="flex flex-col gap-4">
         <article
           v-for="item in results.items"
           :key="item.number"
-          class="review-item card"
-          :class="item.isCorrect ? 'is-correct' : 'is-incorrect'"
+          :class="cn(
+            'flex flex-col gap-3 rounded-[var(--radius-lg)] border bg-surface p-5 shadow-sm border-l-[3px]',
+            item.isCorrect ? 'border-l-success' : 'border-l-danger',
+          )"
         >
-          <div class="review-item__head flex items-center justify-between">
-            <p class="eyebrow">Q{{ item.number }} · {{ item.title }}</p>
-            <span class="review-item__badge">{{ item.isCorrect ? 'Correct' : 'Incorrect' }}</span>
+          <div class="flex items-center justify-between">
+            <p class="font-mono text-xs font-medium uppercase tracking-wider text-ink-faint">Q{{ item.number }} · {{ item.title }}</p>
+            <span
+              :class="cn(
+                'font-mono text-[0.72rem] font-semibold uppercase tracking-[0.04em]',
+                item.isCorrect ? 'text-success' : 'text-danger',
+              )"
+            >{{ item.isCorrect ? 'Correct' : 'Incorrect' }}</span>
           </div>
 
-          <p class="review-item__question">{{ splitQuestion(item.question).before }}</p>
+          <p class="text-[0.98rem]">{{ splitQuestion(item.question).before }}</p>
           <CodeBlock v-if="item.code" :code="item.code" />
-          <p v-if="splitQuestion(item.question).after" class="review-item__question">
+          <p v-if="splitQuestion(item.question).after" class="text-[0.98rem]">
             {{ splitQuestion(item.question).after }}
           </p>
 
-          <ul class="review-item__options">
-            <li v-for="letter in letters" :key="letter" class="review-item__option" :class="optionClass(item, letter)">
-              <span class="review-item__letter">{{ letter }}</span>
+          <ul class="m-0 list-none p-0 flex flex-col gap-2">
+            <li
+              v-for="letter in letters"
+              :key="letter"
+              class="flex items-start gap-3 rounded-[var(--radius-sm)] border px-3 py-2 text-[0.88rem]"
+              :class="optionClass(item, letter) === 'is-correct'
+                ? 'border-success bg-success-soft text-ink'
+                : optionClass(item, letter) === 'is-incorrect'
+                  ? 'border-danger bg-danger-soft text-ink'
+                  : 'border-border text-ink-muted'"
+            >
+              <span class="flex-none font-mono text-[0.75rem] font-semibold">{{ letter }}</span>
               <span>{{ item.options[letter] }}</span>
             </li>
           </ul>
 
-          <p class="review-item__explanation">{{ item.explanation }}</p>
+          <p class="border-t border-border pt-2 text-[0.88rem] text-ink-muted leading-[1.6]">{{ item.explanation }}</p>
         </article>
       </section>
     </main>
   </div>
 </template>
-
-<style scoped>
-.quiz-results {
-  padding-top: var(--space-6);
-  padding-bottom: var(--space-8);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.score-banner {
-  padding: var(--space-6);
-}
-
-.score-banner h1 {
-  font-size: 2.25rem;
-}
-
-.score-banner__actions {
-  margin-top: var(--space-2);
-}
-
-.review-item {
-  padding: var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  border-left: 3px solid var(--border);
-}
-.review-item.is-correct {
-  border-left-color: var(--success);
-}
-.review-item.is-incorrect {
-  border-left-color: var(--danger);
-}
-
-.review-item__badge {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.is-correct .review-item__badge {
-  color: var(--success);
-}
-.is-incorrect .review-item__badge {
-  color: var(--danger);
-}
-
-.review-item__question {
-  font-size: 0.98rem;
-}
-
-.review-item__options {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.review-item__option {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  font-size: 0.88rem;
-  color: var(--ink-muted);
-}
-
-.review-item__option.is-correct {
-  border-color: var(--success);
-  background: var(--success-soft);
-  color: var(--ink);
-}
-.review-item__option.is-incorrect {
-  border-color: var(--danger);
-  background: var(--danger-soft);
-  color: var(--ink);
-}
-
-.review-item__letter {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 600;
-  flex: none;
-}
-
-.review-item__explanation {
-  font-size: 0.88rem;
-  color: var(--ink-muted);
-  line-height: 1.6;
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--border);
-}
-</style>

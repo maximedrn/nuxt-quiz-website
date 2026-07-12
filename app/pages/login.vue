@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import is from '@sindresorhus/is'
 import { FetchError } from 'ofetch'
+import { Button } from '@/app/components/ui/button'
+import { Card, CardContent } from '@/app/components/ui/card'
+import { Input } from '@/app/components/ui/input'
+import { Label } from '@/app/components/ui/label'
 import { TranslationKey } from '@/app/lib/i18n/i18n.keys'
 
 const { t } = useTypedI18n()
@@ -33,42 +37,44 @@ async function run(kind: 'login' | 'register') {
 </script>
 
 <template>
-  <div class="page">
+  <div class="flex min-h-screen flex-col">
     <AppHeader :compact="true" />
     <main class="flex flex-1 items-center justify-center px-6 py-12">
-      <div class="card flex w-full max-w-sm flex-col gap-5 p-8">
-        <div class="flex flex-col gap-1">
-          <p class="eyebrow">{{ t(TranslationKey.LoginTitle) }}</p>
-          <h1 class="text-2xl">{{ t(TranslationKey.LoginSubtitle) }}</h1>
-        </div>
+      <Card class="w-full max-w-sm">
+        <CardContent class="flex flex-col gap-5 p-8">
+          <div class="flex flex-col gap-1">
+            <p class="font-mono text-xs font-medium uppercase tracking-wider text-ink-faint">{{ t(TranslationKey.LoginTitle) }}</p>
+            <h1 class="text-2xl">{{ t(TranslationKey.LoginSubtitle) }}</h1>
+          </div>
 
-        <label class="flex flex-col gap-2">
-          <span class="text-sm font-medium text-ink-muted">{{ t(TranslationKey.LoginCodeLabel) }}</span>
-          <input
-            v-model="code"
-            type="password"
-            inputmode="numeric"
-            autocomplete="off"
-            maxlength="8"
-            :placeholder="t(TranslationKey.LoginCodePlaceholder)"
-            class="rounded-md border border-border-strong bg-bg px-3.5 py-2.5 text-center font-mono text-lg tracking-[0.3em] text-ink outline-none focus:border-accent"
-            @keyup.enter="run('login')"
-          />
-        </label>
+          <div class="flex flex-col gap-2">
+            <Label>{{ t(TranslationKey.LoginCodeLabel) }}</Label>
+            <Input
+              v-model="code"
+              type="password"
+              inputmode="numeric"
+              autocomplete="off"
+              maxlength="8"
+              :placeholder="t(TranslationKey.LoginCodePlaceholder)"
+              class="text-center font-mono text-lg tracking-[0.3em]"
+              @keyup.enter="run('login')"
+            />
+          </div>
 
-        <p v-if="error" class="text-sm text-danger">{{ error }}</p>
+          <p v-if="error" class="text-sm text-danger">{{ error }}</p>
 
-        <div class="flex flex-col gap-2 sm:flex-row">
-          <button type="button" class="btn btn-accent flex-1" :disabled="pending" @click="run('login')">
-            {{ t(TranslationKey.LoginSignIn) }}
-          </button>
-          <button type="button" class="btn btn-ghost flex-1" :disabled="pending" @click="run('register')">
-            {{ t(TranslationKey.LoginRegister) }}
-          </button>
-        </div>
+          <div class="flex flex-col gap-2 sm:flex-row">
+            <Button class="flex-1" :disabled="pending" @click="run('login')">
+              {{ t(TranslationKey.LoginSignIn) }}
+            </Button>
+            <Button variant="outline" class="flex-1" :disabled="pending" @click="run('register')">
+              {{ t(TranslationKey.LoginRegister) }}
+            </Button>
+          </div>
 
-        <p class="text-xs text-ink-faint">{{ t(TranslationKey.LoginHint) }}</p>
-      </div>
+          <p class="text-xs text-ink-faint">{{ t(TranslationKey.LoginHint) }}</p>
+        </CardContent>
+      </Card>
     </main>
   </div>
 </template>

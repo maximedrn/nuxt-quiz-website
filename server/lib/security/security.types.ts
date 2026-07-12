@@ -1,6 +1,6 @@
-import { Data } from 'effect'
 import type { Effect } from 'effect'
-import { HttpStatus } from '@/server/lib/http/http.status'
+import { Data } from 'effect'
+import type { HttpStatus } from '@/server/lib/http/http.status'
 import type { RateLimitKind } from '@/server/lib/security/security.constants'
 
 /** Tagged error for security domain failures. */

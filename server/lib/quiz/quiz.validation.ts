@@ -5,7 +5,12 @@ import { QuizError } from '@/server/lib/quiz/quiz.types'
 import { AnswerLetter, SessionMode } from '@/shared/types'
 
 /** Schema for a single answer letter. */
-const answerLetterSchema = Schema.Literal(AnswerLetter.A, AnswerLetter.B, AnswerLetter.C, AnswerLetter.D)
+const answerLetterSchema = Schema.Literal(
+  AnswerLetter.A,
+  AnswerLetter.B,
+  AnswerLetter.C,
+  AnswerLetter.D,
+)
 
 /** Schema for a session mode. */
 const sessionModeSchema = Schema.Literal(SessionMode.SEQUENTIAL, SessionMode.RANDOM)
@@ -38,7 +43,10 @@ const submitAnswerSchema = Schema.Struct({
  * const body = yield* decodeOr400(createSessionSchema, rawBody)
  * ```
  */
-function decodeOr400<A, I>(schema: Schema.Schema<A, I>, value: unknown): Effect.Effect<A, QuizError> {
+function decodeOr400<A, I>(
+  schema: Schema.Schema<A, I>,
+  value: unknown,
+): Effect.Effect<A, QuizError> {
   return Schema.decodeUnknown(schema)(value).pipe(
     Effect.mapError(
       (e): QuizError =>
@@ -66,4 +74,11 @@ function parseSessionId(value: string | undefined): Effect.Effect<number, QuizEr
   return decodeOr400(Schema.NumberFromString.pipe(Schema.int(), Schema.positive()), value)
 }
 
-export { answerLetterSchema, createSessionSchema, decodeOr400, parseSessionId, sessionModeSchema, submitAnswerSchema }
+export {
+  answerLetterSchema,
+  createSessionSchema,
+  decodeOr400,
+  parseSessionId,
+  sessionModeSchema,
+  submitAnswerSchema,
+}

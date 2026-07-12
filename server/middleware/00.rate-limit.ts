@@ -58,7 +58,10 @@ export default defineEventHandler(async (event) => {
 
   if (Option.isNone(result)) {
     if (isAuthPath) {
-      throw createError({ statusCode: HttpStatus.TOO_MANY_REQUESTS, statusMessage: TOO_MANY_MESSAGE })
+      throw createError({
+        statusCode: HttpStatus.TOO_MANY_REQUESTS,
+        statusMessage: TOO_MANY_MESSAGE,
+      })
     }
     return
   }

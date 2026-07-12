@@ -1,5 +1,4 @@
-import { Effect, Exit, Cause } from 'effect'
-import { Option } from 'effect'
+import { Cause, Effect, Exit, Option } from 'effect'
 import type { AppError } from '@/server/lib/http/http.error'
 
 /**

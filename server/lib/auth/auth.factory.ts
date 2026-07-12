@@ -1,5 +1,5 @@
-import { AuthService } from '@/server/lib/auth/auth.service'
 import type { IAuthService } from '@/server/lib/auth/auth.interface'
+import { AuthService } from '@/server/lib/auth/auth.service'
 import type { AuthDependencies } from '@/server/lib/auth/auth.types'
 
 /**

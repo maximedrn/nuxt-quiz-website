@@ -1,9 +1,9 @@
 import { Effect } from 'effect'
-import type { SessionSummary } from '@/shared/types'
 import { requireUserId } from '@/server/lib/auth/auth.session'
 import { runOrThrow } from '@/server/lib/http/http.run'
 import { toSessionSummary } from '@/server/lib/quiz/quiz.session'
 import { useQuizStorage } from '@/server/lib/storage/storage.context'
+import type { SessionSummary } from '@/shared/types'
 
 /**
  * Lists the authenticated user's sessions, newest first, each with its

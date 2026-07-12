@@ -1,7 +1,7 @@
-import { Data } from 'effect'
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
+import { Data } from 'effect'
 import type { databaseSchema } from '@/server/lib/database/database.schema'
-import { HttpStatus } from '@/server/lib/http/http.status'
+import type { HttpStatus } from '@/server/lib/http/http.status'
 
 /** Tagged error for database domain failures. */
 export class DatabaseError extends Data.TaggedError('DatabaseError')<{

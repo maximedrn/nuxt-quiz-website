@@ -1,14 +1,14 @@
 import { Effect } from 'effect'
-import type { FinishSessionResult } from '@/shared/types'
 import { requireUserId } from '@/server/lib/auth/auth.session'
-import { HttpStatus } from '@/server/lib/http/http.status'
 import { runOrThrow } from '@/server/lib/http/http.run'
+import { HttpStatus } from '@/server/lib/http/http.status'
+import { QuizMessage } from '@/server/lib/quiz/quiz.message'
 import { getOwnedSession } from '@/server/lib/quiz/quiz.session'
 import { QuizError } from '@/server/lib/quiz/quiz.types'
-import { QuizMessage } from '@/server/lib/quiz/quiz.message'
 import { parseSessionId } from '@/server/lib/quiz/quiz.validation'
 import { invalidateStatsCache } from '@/server/lib/storage/storage.cache'
 import { useQuizStorage } from '@/server/lib/storage/storage.context'
+import type { FinishSessionResult } from '@/shared/types'
 
 /**
  * Finalizes a fully-answered session: computes the score, marks it completed

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { Button } from '@/app/components/ui/button'
+import { Card, CardContent } from '@/app/components/ui/card'
+
 const { listSessions } = useApi()
 const { data: sessions, status } = await useAsyncData('history-sessions', () => listSessions())
 
@@ -16,94 +19,44 @@ const modeLabel = (mode: string) => (mode === 'sequential' ? "Dans l'ordre" : 'A
 </script>
 
 <template>
-  <div class="page">
+  <div class="flex min-h-screen flex-col">
     <AppHeader />
 
-    <main class="container history">
+    <main class="mx-auto w-full max-w-[780px] px-6 pb-16 pt-8 flex flex-col gap-5">
       <h1>Historique</h1>
 
-      <p v-if="status === 'pending'" class="history__empty">Chargement…</p>
+      <p v-if="status === 'pending'" class="text-ink-muted">Chargement…</p>
 
-      <p v-else-if="!sessions || sessions.length === 0" class="history__empty">
+      <p v-else-if="!sessions || sessions.length === 0" class="text-ink-muted">
         Aucune session pour l'instant.
         <NuxtLink to="/quiz/new">Lance ta première session</NuxtLink>.
       </p>
 
-      <ul v-else class="history__list">
-        <li v-for="s in sessions" :key="s.id" class="history__row card flex items-center justify-between gap-4">
-          <div class="flex-col gap-1">
-            <p class="history__date">{{ formatDate(s.startedAt) }}</p>
-            <p class="history__meta eyebrow">{{ modeLabel(s.mode) }} · {{ s.total }} questions</p>
-          </div>
+      <ul v-else class="m-0 list-none p-0 flex flex-col gap-3">
+        <li v-for="s in sessions" :key="s.id">
+          <Card>
+            <CardContent class="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
+              <div class="flex flex-col gap-1">
+                <p class="text-[0.92rem] font-medium">{{ formatDate(s.startedAt) }}</p>
+                <p class="font-mono text-[0.72rem] font-medium uppercase tracking-wider text-ink-faint">{{ modeLabel(s.mode) }} · {{ s.total }} questions</p>
+              </div>
 
-          <div class="flex items-center gap-4">
-            <span v-if="s.status === 'completed'" class="history__score">
-              {{ s.score }}/{{ s.total }} · {{ Math.round(((s.score ?? 0) / s.total) * 100) }}%
-            </span>
-            <span v-else class="history__pending">{{ s.answered }}/{{ s.total }} répondues</span>
+              <div class="flex items-center gap-4">
+                <span v-if="s.status === 'completed'" class="font-mono text-[0.85rem]">
+                  {{ s.score }}/{{ s.total }} · {{ Math.round(((s.score ?? 0) / s.total) * 100) }}%
+                </span>
+                <span v-else class="font-mono text-[0.85rem] text-ink-muted">{{ s.answered }}/{{ s.total }} répondues</span>
 
-            <NuxtLink
-              :to="s.status === 'completed' ? `/quiz/${s.id}/results` : `/quiz/${s.id}`"
-              class="btn btn-ghost history__action"
-            >
-              {{ s.status === 'completed' ? 'Revoir' : 'Reprendre' }}
-            </NuxtLink>
-          </div>
+                <Button variant="outline" size="sm" as-child>
+                  <NuxtLink :to="s.status === 'completed' ? `/quiz/${s.id}/results` : `/quiz/${s.id}`">
+                    {{ s.status === 'completed' ? 'Revoir' : 'Reprendre' }}
+                  </NuxtLink>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </li>
       </ul>
     </main>
   </div>
 </template>
-
-<style scoped>
-.history {
-  padding-top: var(--space-6);
-  padding-bottom: var(--space-8);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-
-.history__empty {
-  color: var(--ink-muted);
-}
-
-.history__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.history__row {
-  padding: var(--space-4) var(--space-5);
-  flex-wrap: wrap;
-}
-
-.history__date {
-  font-size: 0.92rem;
-  font-weight: 500;
-}
-
-.history__meta {
-  font-size: 0.72rem;
-}
-
-.history__score {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-}
-
-.history__pending {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--ink-muted);
-}
-
-.history__action {
-  padding: 0.45rem 0.9rem;
-  font-size: 0.85rem;
-}
-</style>

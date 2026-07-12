@@ -4,7 +4,7 @@ import { redisDriver } from 'bentocache/drivers/redis'
 import { Duration, Effect, Option, Schedule } from 'effect'
 import { Redis } from 'ioredis'
 import { CacheMessage } from '@/server/lib/cache/cache.message'
-import { CacheError, type CacheConfig } from '@/server/lib/cache/cache.types'
+import { type CacheConfig, CacheError } from '@/server/lib/cache/cache.types'
 import type { ICacheDriver } from '@/server/lib/cache/drivers/cache.driver.interface'
 import { HttpStatus } from '@/server/lib/http/http.status'
 
@@ -52,7 +52,10 @@ class BentoCacheDriver implements ICacheDriver {
     return Effect.tryPromise({
       try: thunk,
       catch: (e): CacheError =>
-        new CacheError({ message: `${CacheMessage.OP_FAILED}: ${op}: ${String(e)}`, status: HttpStatus.INTERNAL }),
+        new CacheError({
+          message: `${CacheMessage.OP_FAILED}: ${op}: ${String(e)}`,
+          status: HttpStatus.INTERNAL,
+        }),
     }).pipe(
       Effect.timeout(OP_TIMEOUT),
       Effect.retry(OP_RETRIES),
@@ -61,7 +64,10 @@ class BentoCacheDriver implements ICacheDriver {
           Effect.fail(
             e instanceof CacheError
               ? e
-              : new CacheError({ message: `${CacheMessage.OP_FAILED}: ${op}`, status: HttpStatus.INTERNAL }),
+              : new CacheError({
+                  message: `${CacheMessage.OP_FAILED}: ${op}`,
+                  status: HttpStatus.INTERNAL,
+                }),
           ),
       ),
     )
@@ -79,9 +85,17 @@ class BentoCacheDriver implements ICacheDriver {
    *
    * @returns {Effect.Effect<A, CacheError>}
    */
-  getOrSet<A>(key: string, ttlSeconds: number, factory: () => Effect.Effect<A, CacheError>): Effect.Effect<A, CacheError> {
+  getOrSet<A>(
+    key: string,
+    ttlSeconds: number,
+    factory: () => Effect.Effect<A, CacheError>,
+  ): Effect.Effect<A, CacheError> {
     return this.run('getOrSet', () =>
-      this.bento.getOrSet<A>({ key, ttl: `${ttlSeconds}s`, factory: () => Effect.runPromise(factory()) }),
+      this.bento.getOrSet<A>({
+        key,
+        ttl: `${ttlSeconds}s`,
+        factory: () => Effect.runPromise(factory()),
+      }),
     )
   }
 
@@ -108,9 +122,9 @@ class BentoCacheDriver implements ICacheDriver {
    * @returns {Effect.Effect<Option.Option<A>, CacheError>}
    */
   get<A>(key: string): Effect.Effect<Option.Option<A>, CacheError> {
-    return this.run('get', () => this.bento.get<A | undefined>({ key, defaultValue: undefined })).pipe(
-      Effect.map((v): Option.Option<A> => (v === undefined ? Option.none() : Option.some(v))),
-    )
+    return this.run('get', () =>
+      this.bento.get<A | undefined>({ key, defaultValue: undefined }),
+    ).pipe(Effect.map((v): Option.Option<A> => (v === undefined ? Option.none() : Option.some(v))))
   }
 
   /**

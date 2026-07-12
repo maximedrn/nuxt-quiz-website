@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { History, LogOut, Moon, Plus, Sun } from 'lucide-vue-next'
+import { Button } from '@/app/components/ui/button'
 import { TranslationKey } from '@/app/lib/i18n/i18n.keys'
 
 withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
@@ -11,7 +12,7 @@ const { isAuthed, logout } = useAuth()
 
 <template>
   <header class="border-b border-border bg-bg">
-    <div class="container flex items-center justify-between py-4">
+    <div class="mx-auto w-full max-w-[780px] px-6 flex items-center justify-between py-4">
       <NuxtLink to="/" class="flex items-center gap-2 text-ink no-underline">
         <span class="block h-2.5 w-2.5 flex-none rounded-sm bg-accent" aria-hidden="true" />
         <span class="font-display text-base font-semibold tracking-tight">
@@ -45,10 +46,12 @@ const { isAuthed, logout } = useAuth()
             <History :size="16" />
             {{ t(TranslationKey.NavHistory) }}
           </NuxtLink>
-          <NuxtLink to="/quiz/new" class="btn btn-accent px-3.5 py-2 text-sm">
-            <Plus :size="16" />
-            {{ t(TranslationKey.NavNewSession) }}
-          </NuxtLink>
+          <Button as-child variant="default" size="sm">
+            <NuxtLink to="/quiz/new" class="flex items-center gap-1.5">
+              <Plus :size="16" />
+              {{ t(TranslationKey.NavNewSession) }}
+            </NuxtLink>
+          </Button>
           <button
             v-if="isAuthed"
             type="button"

@@ -3,7 +3,7 @@
  * translatable string id. Using a const enum keeps call sites type-safe
  * (`t(TranslationKey.NavHistory)`) while the values stay as stable dotted ids.
  */
-export enum TranslationKey {
+export const enum TranslationKey {
   NavBrand = 'nav.brand',
   NavHistory = 'nav.history',
   NavNewSession = 'nav.newSession',

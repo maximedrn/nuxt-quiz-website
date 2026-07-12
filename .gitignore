@@ -21,3 +21,6 @@ npm-debug.log*
 
 # Superpowers scratch
 .superpowers/
+
+# npm (project uses bun)
+package-lock.json

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Button } from '@/app/components/ui/button'
+import { Card, CardContent } from '@/app/components/ui/card'
 import type { SessionMode } from '@/shared/types'
 
 const { getQuestionCount, createSession } = useApi()
@@ -40,126 +42,68 @@ async function start() {
 </script>
 
 <template>
-  <div class="page">
+  <div class="flex min-h-screen flex-col">
     <AppHeader compact />
 
-    <main class="container new-session">
-      <NuxtLink to="/" class="back-link">&larr; Tableau de bord</NuxtLink>
+    <main class="mx-auto w-full max-w-[560px] px-6 pb-16 pt-8 flex flex-col">
+      <NuxtLink to="/" class="mb-8 inline-block text-[0.85rem] text-ink-muted no-underline hover:text-ink">&larr; Tableau de bord</NuxtLink>
 
-      <h1>Nouvelle session</h1>
-      <p class="new-session__subtitle">Choisis la longueur et l'ordre des questions.</p>
+      <h1 class="mb-2">Nouvelle session</h1>
+      <p class="mb-8 text-ink-muted">Choisis la longueur et l'ordre des questions.</p>
 
-      <div class="card new-session__form flex-col gap-6">
-        <div class="field flex-col gap-3">
-          <p class="eyebrow">Nombre de questions</p>
-          <div class="option-pills flex flex-wrap gap-2">
-            <button
-              v-for="n in sizeOptions"
-              :key="n"
-              type="button"
-              class="pill"
-              :class="{ 'is-active': size === n }"
-              @click="size = n"
-            >
-              {{ n === total ? `Toutes (${n})` : n }}
-            </button>
+      <Card>
+        <CardContent class="flex flex-col gap-6 p-6">
+          <div class="flex flex-col gap-3">
+            <p class="font-mono text-xs font-medium uppercase tracking-wider text-ink-faint">Nombre de questions</p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="n in sizeOptions"
+                :key="n"
+                type="button"
+                class="cursor-pointer rounded-full border px-4 py-2 text-[0.88rem] font-medium transition-colors"
+                :class="size === n
+                  ? 'border-ink bg-ink text-white'
+                  : 'border-border-strong bg-surface text-ink hover:border-accent'"
+                @click="size = n"
+              >
+                {{ n === total ? `Toutes (${n})` : n }}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div class="field flex-col gap-3">
-          <p class="eyebrow">Ordre</p>
-          <div class="option-pills flex flex-wrap gap-2">
-            <button
-              type="button"
-              class="pill"
-              :class="{ 'is-active': mode === 'random' }"
-              @click="mode = 'random'"
-            >
-              Aléatoire
-            </button>
-            <button
-              type="button"
-              class="pill"
-              :class="{ 'is-active': mode === 'sequential' }"
-              @click="mode = 'sequential'"
-            >
-              Dans l'ordre
-            </button>
+          <div class="flex flex-col gap-3">
+            <p class="font-mono text-xs font-medium uppercase tracking-wider text-ink-faint">Ordre</p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                type="button"
+                class="cursor-pointer rounded-full border px-4 py-2 text-[0.88rem] font-medium transition-colors"
+                :class="mode === 'random'
+                  ? 'border-ink bg-ink text-white'
+                  : 'border-border-strong bg-surface text-ink hover:border-accent'"
+                @click="mode = 'random'"
+              >
+                Aléatoire
+              </button>
+              <button
+                type="button"
+                class="cursor-pointer rounded-full border px-4 py-2 text-[0.88rem] font-medium transition-colors"
+                :class="mode === 'sequential'
+                  ? 'border-ink bg-ink text-white'
+                  : 'border-border-strong bg-surface text-ink hover:border-accent'"
+                @click="mode = 'sequential'"
+              >
+                Dans l'ordre
+              </button>
+            </div>
           </div>
-        </div>
 
-        <p v-if="errorMessage" class="new-session__error">{{ errorMessage }}</p>
+          <p v-if="errorMessage" class="text-[0.88rem] text-danger">{{ errorMessage }}</p>
 
-        <button type="button" class="btn btn-accent new-session__start" :disabled="isStarting" @click="start">
-          {{ isStarting ? 'Démarrage…' : 'Commencer' }}
-        </button>
-      </div>
+          <Button class="w-full py-[0.85rem] text-base" :disabled="isStarting" @click="start">
+            {{ isStarting ? 'Démarrage…' : 'Commencer' }}
+          </Button>
+        </CardContent>
+      </Card>
     </main>
   </div>
 </template>
-
-<style scoped>
-.new-session {
-  padding-top: var(--space-6);
-  padding-bottom: var(--space-8);
-  max-width: 560px;
-}
-
-.back-link {
-  display: inline-block;
-  font-size: 0.85rem;
-  color: var(--ink-muted);
-  text-decoration: none;
-  margin-bottom: var(--space-5);
-}
-.back-link:hover {
-  color: var(--ink);
-}
-
-h1 {
-  margin-bottom: var(--space-2);
-}
-
-.new-session__subtitle {
-  color: var(--ink-muted);
-  margin-bottom: var(--space-6);
-}
-
-.new-session__form {
-  padding: var(--space-6);
-}
-
-.pill {
-  border: 1px solid var(--border-strong);
-  background: var(--bg-raised);
-  border-radius: 999px;
-  padding: 0.5rem 1rem;
-  font-size: 0.88rem;
-  font-weight: 500;
-  cursor: pointer;
-  color: var(--ink);
-  transition:
-    border-color 0.12s ease,
-    background 0.12s ease,
-    color 0.12s ease;
-}
-.pill:hover {
-  border-color: var(--accent);
-}
-.pill.is-active {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: #fff;
-}
-
-.new-session__start {
-  width: 100%;
-  padding: 0.85rem;
-  font-size: 1rem;
-}
-
-.new-session__error {
-  color: var(--danger);
-  font-size: 0.88rem;
-}
-</style>

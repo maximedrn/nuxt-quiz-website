@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { Button } from '@/app/components/ui/button'
+import { Card, CardContent } from '@/app/components/ui/card'
+
 const { getStats } = useApi()
 const { data: stats, status } = await useAsyncData('dashboard-stats', () => getStats())
 
@@ -14,38 +17,46 @@ function formatDate(iso: string) {
 </script>
 
 <template>
-  <div class="page">
+  <div class="flex min-h-screen flex-col">
     <AppHeader />
 
-    <main class="container dashboard">
-      <section class="hero flex-col gap-3">
-        <p class="eyebrow">Cyfrin SSCD+ · Core Solidity &amp; EVM Mechanics</p>
+    <main class="mx-auto w-full max-w-[780px] px-6 pb-16 pt-10 flex flex-col gap-6">
+      <section class="flex flex-col gap-3">
+        <p class="font-mono text-xs font-medium uppercase tracking-wider text-ink-faint">Cyfrin SSCD+ · Core Solidity &amp; EVM Mechanics</p>
         <h1>Entraînement Solidity &amp; EVM</h1>
-        <p class="hero__subtitle">
+        <p class="text-[1.02rem] text-ink-muted max-w-[46ch]">
           90 questions à choix multiple issues du guide de certification. Réponds, vérifie, et suis ta
           progression au fil de tes sessions.
         </p>
-        <div class="hero__actions flex gap-3">
-          <NuxtLink to="/quiz/new" class="btn btn-accent">Nouvelle session</NuxtLink>
-          <NuxtLink v-if="hasHistory" to="/history" class="btn btn-ghost">Voir l'historique</NuxtLink>
+        <div class="flex gap-3 mt-2">
+          <Button as-child>
+            <NuxtLink to="/quiz/new">Nouvelle session</NuxtLink>
+          </Button>
+          <Button v-if="hasHistory" variant="outline" as-child>
+            <NuxtLink to="/history">Voir l'historique</NuxtLink>
+          </Button>
         </div>
       </section>
 
-      <section v-if="status === 'pending'" class="empty-state card">
-        <p>Chargement…</p>
-      </section>
+      <Card v-if="status === 'pending'">
+        <CardContent class="p-6">
+          <p>Chargement…</p>
+        </CardContent>
+      </Card>
 
       <template v-else-if="stats">
-        <section v-if="!hasHistory" class="empty-state card flex-col gap-2">
-          <h2>Aucune session pour l'instant</h2>
-          <p>
-            Lance ta première session d'entraînement pour commencer à suivre ta progression sur les
-            {{ stats.totalQuestions }} questions du guide.
-          </p>
-        </section>
+        <Card v-if="!hasHistory">
+          <CardContent class="p-6 flex flex-col gap-2">
+            <h2 class="text-[1.1rem]">Aucune session pour l'instant</h2>
+            <p class="text-ink-muted">
+              Lance ta première session d'entraînement pour commencer à suivre ta progression sur les
+              {{ stats.totalQuestions }} questions du guide.
+            </p>
+          </CardContent>
+        </Card>
 
         <template v-else>
-          <section class="stats-grid flex flex-wrap gap-4">
+          <section class="flex flex-wrap gap-4">
             <StatCard label="Sessions complétées" :value="String(stats.completedSessions)" />
             <StatCard label="Score moyen" :value="pct(stats.averageScorePct)" />
             <StatCard label="Meilleur score" :value="pct(stats.bestScorePct)" />
@@ -57,120 +68,37 @@ function formatDate(iso: string) {
             />
           </section>
 
-          <section class="card trend">
-            <div class="flex items-center justify-between">
-              <p class="eyebrow">Dernières sessions</p>
-            </div>
-            <div class="trend__chart">
-              <TrendSparkline :points="trendPoints" :width="600" :height="120" />
-            </div>
-            <div class="trend__labels flex justify-between">
-              <span v-for="t in stats.trend" :key="t.sessionId" class="trend__label">
-                {{ formatDate(t.finishedAt) }} · {{ t.percentage }}%
-              </span>
-            </div>
-          </section>
+          <Card>
+            <CardContent class="p-5 flex flex-col gap-3">
+              <p class="font-mono text-xs font-medium uppercase tracking-wider text-ink-faint">Dernières sessions</p>
+              <div class="h-[120px]">
+                <TrendSparkline :points="trendPoints" :width="600" :height="120" />
+              </div>
+              <div class="flex flex-wrap justify-between gap-2">
+                <span v-for="t in stats.trend" :key="t.sessionId" class="font-mono text-[0.72rem] text-ink-faint">
+                  {{ formatDate(t.finishedAt) }} · {{ t.percentage }}%
+                </span>
+              </div>
+            </CardContent>
+          </Card>
 
-          <section v-if="stats.weakest.length > 0" class="card weak-list">
-            <p class="eyebrow">Questions à retravailler</p>
-            <ul class="weak-list__items">
-              <li v-for="w in stats.weakest" :key="w.number" class="weak-list__item flex items-center justify-between">
-                <span class="weak-list__title">Q{{ w.number }} · {{ w.title }}</span>
-                <span class="weak-list__rate">{{ Math.round(w.wrongRate * 100) }}% d'erreurs · {{ w.attempts }} tentative(s)</span>
-              </li>
-            </ul>
-          </section>
+          <Card v-if="stats.weakest.length > 0">
+            <CardContent class="p-5 flex flex-col gap-3">
+              <p class="font-mono text-xs font-medium uppercase tracking-wider text-ink-faint">Questions à retravailler</p>
+              <ul class="m-0 list-none p-0 flex flex-col gap-2">
+                <li
+                  v-for="w in stats.weakest"
+                  :key="w.number"
+                  class="flex items-center justify-between gap-3 border-t border-border py-3 first:border-t-0"
+                >
+                  <span class="text-[0.9rem]">Q{{ w.number }} · {{ w.title }}</span>
+                  <span class="flex-none font-mono text-[0.75rem] text-danger">{{ Math.round(w.wrongRate * 100) }}% d'erreurs · {{ w.attempts }} tentative(s)</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
         </template>
       </template>
     </main>
   </div>
 </template>
-
-<style scoped>
-.dashboard {
-  padding-top: var(--space-7);
-  padding-bottom: var(--space-8);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.hero__subtitle {
-  color: var(--ink-muted);
-  font-size: 1.02rem;
-  max-width: 46ch;
-}
-
-.hero__actions {
-  margin-top: var(--space-2);
-}
-
-.empty-state {
-  padding: var(--space-6);
-}
-
-.empty-state h2 {
-  font-size: 1.1rem;
-}
-.empty-state p {
-  color: var(--ink-muted);
-}
-
-.trend {
-  padding: var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.trend__chart {
-  height: 120px;
-}
-
-.trend__labels {
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.trend__label {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--ink-faint);
-}
-
-.weak-list {
-  padding: var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.weak-list__items {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.weak-list__item {
-  padding: var(--space-3) 0;
-  border-top: 1px solid var(--border);
-  gap: var(--space-3);
-}
-.weak-list__item:first-child {
-  border-top: none;
-}
-
-.weak-list__title {
-  font-size: 0.9rem;
-}
-
-.weak-list__rate {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--danger);
-  flex: none;
-}
-</style>
