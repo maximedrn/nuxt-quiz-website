@@ -3,7 +3,7 @@ import is from '@sindresorhus/is'
 import { FetchError } from 'ofetch'
 import { TranslationKey } from '@/app/lib/i18n/i18n.keys'
 
-const { t } = useI18n()
+const { t } = useTypedI18n()
 const { register, login } = useAuth()
 
 const code = ref('')

@@ -4,7 +4,7 @@ import { TranslationKey } from '@/app/lib/i18n/i18n.keys'
 
 withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
 
-const { t, toggleLocale } = useI18n()
+const { t, toggleLocale } = useTypedI18n()
 const { toggle: toggleTheme, isDark } = useTheme()
 const { isAuthed, logout } = useAuth()
 </script>

@@ -9,7 +9,17 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
-  modules: ['@vueuse/nuxt', 'nuxt-auth-utils'],
+  modules: ['@vueuse/nuxt', 'nuxt-auth-utils', '@nuxtjs/i18n'],
+
+  i18n: {
+    defaultLocale: 'fr',
+    strategy: 'no_prefix',
+    bundle: { optimizeTranslationDirective: false },
+    locales: [
+      { code: 'fr', file: 'fr.json' },
+      { code: 'en', file: 'en.json' },
+    ],
+  },
 
   // Every explicit import in the project is written `@/...` from the repo root.
   // Nuxt propagates this alias into both Vite and the generated tsconfig paths.

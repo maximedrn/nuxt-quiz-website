@@ -1,0 +1,27 @@
+{
+  "nav": {
+    "brand": "Core Solidity & EVM",
+    "history": "Historique",
+    "newSession": "Nouvelle session",
+    "logout": "Déconnexion"
+  },
+  "theme": {
+    "toggle": "Thème"
+  },
+  "lang": {
+    "toggle": "EN"
+  },
+  "login": {
+    "title": "Connexion",
+    "subtitle": "Entre ton code à 8 chiffres pour continuer.",
+    "codeLabel": "Code à 8 chiffres",
+    "codePlaceholder": "••••••••",
+    "signIn": "Se connecter",
+    "register": "Créer un compte",
+    "hint": "Choisis un code que tu retiendras — il ne peut pas être récupéré.",
+    "invalidCode": "Le code doit contenir exactement 8 chiffres."
+  },
+  "common": {
+    "loading": "Chargement…"
+  }
+}
