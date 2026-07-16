@@ -31,9 +31,8 @@ const createSession: (input: {
 }) => Promise<CreateSessionResult> = api.createSession;
 
 const { data: countData }: { data: Ref<{ count: number } | undefined> } =
-  await useAsyncData(
-    "question-count",
-    (): Promise<{ count: number }> => getQuestionCount(quizId),
+  await useAsyncData("question-count", (): Promise<{ count: number }> =>
+    getQuestionCount(quizId),
   );
 
 const total: ComputedRef<number> = computed(
