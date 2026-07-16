@@ -43,6 +43,20 @@ bun run dev
 bun run build
 ```
 
+## Seed data
+
+The file `data/solidity-evm-quiz-seed.sql` is encrypted with [git-crypt](https://github.com/AGWA/git-crypt). To decrypt it, you need the key file.
+
+```bash
+git-crypt unlock /path/to/quiz-crypt.key
+```
+
+Then load the data into the database:
+
+```bash
+psql -h localhost -U quiz -d solidity_quiz -f data/solidity-evm-quiz-seed.sql
+```
+
 ## How to add a new quiz?
 
 ### `quizzes` schema
