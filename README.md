@@ -20,6 +20,7 @@ Multiple-choice quiz app - sessions, progress tracking, and syntax-highlighted c
 
 - [Bun](https://bun.sh)
 - [Docker](https://www.docker.com)
+- [git-crypt](https://github.com/AGWA/git-crypt) to decrypt the seed data (optional)
 
 ## Installation
 
@@ -45,16 +46,20 @@ bun run build
 
 ## Seed data
 
-The file `data/solidity-evm-quiz-seed.sql` is encrypted with [git-crypt](https://github.com/AGWA/git-crypt). To decrypt it, you need the key file.
+The file `data/solidity-evm-quiz-seed.sql` is encrypted. To decrypt it, you need the key file.
 
 ```bash
-git-crypt unlock /path/to/quiz-crypt.key
+git-crypt unlock <PATH_TO_KEY_FILE>
 ```
 
 Then load the data into the database:
 
 ```bash
-psql -h localhost -U quiz -d solidity_quiz -f data/solidity-evm-quiz-seed.sql
+psql \
+  -h <DATABASE_HOST> \
+  -U <DATABASE_USER> \
+  -d <DATABASE_NAME> \
+  -f data/solidity-evm-quiz-seed.sql
 ```
 
 ## How to add a new quiz?
