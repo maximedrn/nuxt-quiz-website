@@ -14,7 +14,7 @@
     "fast-shuffle": "6.2.1",
     "ioredis": "5.11.1",
     "lucide-vue-next": "1.0.0",
-    "nuxt": "4.4.8",
+    "nuxt": "4.5.1",
     "nuxt-auth-utils": "0.5.29",
     "ofetch": "1.5.1",
     "postgres": "3.4.9",
